@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import os, glob
 from PIL import Image as p_Image
+import cv2
 import math
 
 def main():
@@ -15,8 +16,13 @@ def main():
 
     holo = Hologram()
     holo.read_image_file_into_array(images_list[0])
-    holo.display_spectrum()
+    # holo.display_spectrum()
 
+    recon = Reconstruction(holo)
+
+    # plt.show()
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
 def get_list_images(directory, mask):
@@ -57,12 +63,30 @@ class Hologram(Image):
     def display_spectrum(self):
         spectrum = np.fft.fft2(self.image_array, norm='ortho')
         spectrum =  np.log(abs(spectrum))
-        spectrum *= 255.0 / spectrum.max()
-        #spectrum = np.uint8(spectrum)
-        print(spectrum.max())
-        image = p_Image.fromarray( spectrum, 'L')
-        image.show()
-        #TODO: Spectrum is not displaying the correct image. fix: Pillow show is using a windows application
+        spectrum -= spectrum.min()
+        spectrum *= 255 / spectrum.max()
+        imS = spectrum.astype(np.uint8)
+        imS = cv2.resize(imS, (640, 512))
+        cv2.imshow("Spectrum", imS)
+        r = cv2.selectROI(spectrum.astype(np.uint8))
+        imCrop = spectrum[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
+        cv2.imshow("Image", np.uint8(imCrop))
+        # TODO: continue from this crop to the reconstruction of the hologram.
+
+
+class Reconstruction(Image):
+    def __init__(self, holo: Hologram, distance=0, spectrum_roi=None):
+        self.distance = distance
+        super(Reconstruction, self).__init__()
+
+        if spectrum_roi == None:
+            self.filter_hologram(holo)
+        else:
+            self.spectrum_roi = spectrum_roi
+
+    def filter_hologram(self, holo: Hologram):
+        holo.display_spectrum()
+
 
 if __name__ == "__main__":
     main()
