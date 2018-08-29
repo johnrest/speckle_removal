@@ -61,16 +61,30 @@ class Hologram(Image):
         super(Hologram, self).__init__()
 
     def display_spectrum(self):
-        spectrum = np.fft.fft2(self.image_array, norm='ortho')
-        spectrum =  np.log(abs(spectrum))
+        fourier = np.fft.fft2(self.image_array, norm='ortho')
+        spectrum =  np.log(abs(fourier))
         spectrum -= spectrum.min()
         spectrum *= 255 / spectrum.max()
         imS = spectrum.astype(np.uint8)
         imS = cv2.resize(imS, (640, 512))
         cv2.imshow("Spectrum", imS)
         r = cv2.selectROI(spectrum.astype(np.uint8))
-        imCrop = spectrum[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
-        cv2.imshow("Image", np.uint8(imCrop))
+
+        fourier_cropped = fourier[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
+
+        full_height, full_width  = self.image_array.shape
+        cropped_height, cropped_width = fourier_cropped.shape
+
+        #Padding with zeros to expand to original size
+        filtered = np.zeros((full_height, full_width))
+        init_width = int(full_width/2 - round(cropped_width/2))
+        init_height = int(full_height/2 - round(cropped_height/2))
+
+        filtered[init_height:init_height+cropped_height, init_width:init_width+cropped_width] = fourier_cropped
+        print(filtered)
+
+
+        # cv2.imshow("Image", np.uint8(imCrop))
         # TODO: continue from this crop to the reconstruction of the hologram.
 
 
