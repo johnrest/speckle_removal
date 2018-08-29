@@ -6,6 +6,7 @@ import os, glob
 from PIL import Image as p_Image
 import cv2
 import math
+import cmath
 
 def main():
     print("SPECKLE REMOVAL PROJECT")
@@ -19,6 +20,7 @@ def main():
     # holo.display_spectrum()
 
     recon = Reconstruction(holo)
+    recon.propagate(-1.3)
 
     # plt.show()
     cv2.waitKey(0)
@@ -63,34 +65,18 @@ class Hologram(Image):
     def display_spectrum(self):
         fourier = np.fft.fft2(self.image_array, norm='ortho')
         spectrum =  np.log(abs(fourier))
-        spectrum -= spectrum.min()
-        spectrum *= 255 / spectrum.max()
-        imS = spectrum.astype(np.uint8)
-        imS = cv2.resize(imS, (640, 512))
-        cv2.imshow("Spectrum", imS)
-        r = cv2.selectROI(spectrum.astype(np.uint8))
-
-        fourier_cropped = fourier[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
-
-        full_height, full_width  = self.image_array.shape
-        cropped_height, cropped_width = fourier_cropped.shape
-
-        #Padding with zeros to expand to original size
-        filtered = np.zeros((full_height, full_width))
-        init_width = int(full_width/2 - round(cropped_width/2))
-        init_height = int(full_height/2 - round(cropped_height/2))
-
-        filtered[init_height:init_height+cropped_height, init_width:init_width+cropped_width] = fourier_cropped
-        print(filtered)
-
-
-        # cv2.imshow("Image", np.uint8(imCrop))
-        # TODO: continue from this crop to the reconstruction of the hologram.
-
+        display_image(spectrum, 0.5, "Spectrum")
 
 class Reconstruction(Image):
     def __init__(self, holo: Hologram, distance=0, spectrum_roi=None):
         self.distance = distance
+        self.sensor_width = holo.sensor_width
+        self.sensor_height = holo.sensor_height
+        self.wavelength = holo.wavelength
+
+        self.pixel_width = self.distance*self.wavelength/self.sensor_width
+        self.pixel_height = self.distance * self.wavelength / self.sensor_height
+
         super(Reconstruction, self).__init__()
 
         if spectrum_roi == None:
@@ -99,8 +85,74 @@ class Reconstruction(Image):
             self.spectrum_roi = spectrum_roi
 
     def filter_hologram(self, holo: Hologram):
-        holo.display_spectrum()
+        fourier = np.fft.fftshift(np.fft.fft2(holo.image_array, norm='ortho'))
+        spectrum = np.log(abs(fourier))
+        spectrum = array_to_image(spectrum)
+
+        self.spectrum_roi = cv2.selectROI(spectrum)
+        r = self.spectrum_roi
+
+        #Select area and press enter for continuing
+        fourier_cropped = fourier[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
+
+        full_height, full_width  = holo.image_array.shape
+        cropped_height, cropped_width = fourier_cropped.shape
+
+        #Padding with zeros to expand to original size
+        filtered = np.zeros((full_height, full_width), dtype=complex)
+        init_width = int(full_width/2 - round(cropped_width/2))
+        init_height = int(full_height/2 - round(cropped_height/2))
+
+        filtered[init_height:init_height+cropped_height, init_width:init_width+cropped_width] = fourier_cropped
+        filtered_spectrum = (abs(filtered))
+        display_image(filtered_spectrum, 0.5, "filtered")
+
+        self.image_array = filtered_spectrum
+
+
+    def propagate(self, distance):
+        k = 2*math.pi/self.wavelength
+
+        #Image pixel sizes
+        self.pixel_width = distance * self.wavelength / self.sensor_width
+        self.pixel_height = distance * self.wavelength / self.sensor_height
+
+        full_height, full_width = self.image_array.shape
+
+        u = (np.linspace(1, full_width, full_width)-full_width/2)/self.sensor_width
+        v = (np.linspace(1, full_height, full_height)-full_height/2)/self.sensor_height
+
+        U, V = np.meshgrid(u, v)
+
+        O = np.fft.fftshift(np.fft.fft2(self.image_array, norm='ortho'))
+
+        H = np.exp(1j*k*self.distance)*np.exp(-1j*math.pi*self.wavelength*self.distance*(np.power(U,2) + np.power(V,2)))
+
+        U = (np.fft.ifft2(H * O, norm='ortho'))
+
+        phase = np.arctan2(np.imag(H), np.real(H))
+        display_image(np.imag(H), 0.5, "Reconstructed")
+
+        #TODO: Fresnel transform is not working. Review the H matrix
+
+
+#Helper functions
+def display_image(array, scale=1, title="Image"):
+    image = array_to_image(array)
+    height, width = image.shape
+    height = int(height*scale)
+    width = int(width * scale)
+    resampled = cv2.resize(image, (width, height))
+    cv2.imshow(title, resampled)
+
+
+def array_to_image(array):
+    array -= array.min()
+    array *= 255 / array.max()
+    image = array.astype(np.uint8)
+    return image
 
 
 if __name__ == "__main__":
     main()
+
