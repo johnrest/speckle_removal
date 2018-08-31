@@ -20,7 +20,7 @@ def main():
     # holo.display_spectrum()
 
     recon = Reconstruction(holo)
-    recon.propagate(-1.3)
+    recon.propagate(1.3)
 
     # plt.show()
     cv2.waitKey(0)
@@ -102,15 +102,15 @@ class Reconstruction(Image):
         filtered = np.zeros((full_height, full_width), dtype=complex)
         init_width = int(full_width/2 - round(cropped_width/2))
         init_height = int(full_height/2 - round(cropped_height/2))
-
         filtered[init_height:init_height+cropped_height, init_width:init_width+cropped_width] = fourier_cropped
-        filtered_spectrum = (abs(filtered))
-        display_image(filtered_spectrum, 0.5, "filtered")
 
-        self.image_array = filtered_spectrum
+        #Inverse fourier transform to recover object wavefront
+        object = np.fft.ifft2(filtered)
+        self.image_array = object
 
 
     def propagate(self, distance):
+        self.distance = distance
         k = 2*math.pi/self.wavelength
 
         #Image pixel sizes
@@ -119,21 +119,28 @@ class Reconstruction(Image):
 
         full_height, full_width = self.image_array.shape
 
-        u = (np.linspace(1, full_width, full_width)-full_width/2)/self.sensor_width
-        v = (np.linspace(1, full_height, full_height)-full_height/2)/self.sensor_height
+        u = 1/((np.linspace(1, full_width, full_width)-full_width/2)*(self.sensor_width/full_width))
+        v = 1/((np.linspace(1, full_height, full_height)-full_height/2)*(self.sensor_width/full_width))
+
+        mask=np.zeros((full_height, full_width), dtype=complex)
+        mask[500:524,620:660] = 1.0
+        display_image(mask, 0.5, "Mask")
 
         U, V = np.meshgrid(u, v)
 
-        O = np.fft.fftshift(np.fft.fft2(self.image_array, norm='ortho'))
+        O = np.fft.fftshift(np.fft.fft2(mask, norm='ortho'))
+        display_image(np.abs(O), 0.5, "Abs of O")
 
-        H = np.exp(1j*k*self.distance)*np.exp(-1j*math.pi*self.wavelength*self.distance*(np.power(U,2) + np.power(V,2)))
+        # H = np.exp(1j*k*self.distance) * np.exp(-1j*math.pi*self.wavelength*self.distance*(np.power(U,2) + np.power(V,2)))
+        H = np.exp(1j * k * self.distance* np.sqrt( 1 - (np.power(U*self.wavelength, 2) + np.power(V*self.wavelength , 2))))
 
-        U = (np.fft.ifft2(H * O, norm='ortho'))
+        U = np.fft.ifftshift(np.fft.ifft2(H, norm='ortho'))
 
-        phase = np.arctan2(np.imag(H), np.real(H))
-        display_image(np.imag(H), 0.5, "Reconstructed")
+        display_image(np.abs(U), 0.5, "Abs of U")
 
-        #TODO: Fresnel transform is not working. Review the H matrix
+        #TODO: Fresnel transform not working
+
+
 
 
 #Helper functions
