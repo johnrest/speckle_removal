@@ -12,17 +12,23 @@ def main():
     print("SPECKLE REMOVAL PROJECT")
     target_folder = "C:/Users/itm/Desktop/DH/2018_08_17/dice_16_walsh"
     target_mask = "holo*"
+    reconstruct_prefix = "rec_"
 
     images_list = get_list_images(target_folder, target_mask)
 
     holo = Hologram()
     holo.read_image_file_into_array(images_list[0])
-    # holo.display_spectrum()
 
     recon = Reconstruction(holo)
-    recon.propagate(1.3)
+    prop = recon
+    prop.image_array = recon.propagate(1.3)
+    display_image(abs(prop.image_array), 0.5, "Propagated amplitude")
 
-    # plt.show()
+    prop.write_array_into_image_file(os.path.join(target_folder, "rec_01"), ".bmp")
+
+    #TODO: design behaviour for multiple holograms....load all images VS process and read image by image
+    #TODO: Write speckle computations...new class?
+
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
@@ -45,8 +51,12 @@ class Image:
 
     def write_array_into_image_file(self, filename, format):
         """Write np array into an image of specified format"""
-        #TODO:implement the writing into file
-        pass
+        if np.iscomplex(self.image_array).any():
+            image = array_to_image(abs(self.image_array))
+        else:
+            image = array_to_image(self.image_array)
+
+        cv2.imwrite(filename+format, image)
 
     def display(self):
         """Display the image through pillow"""
@@ -119,28 +129,15 @@ class Reconstruction(Image):
 
         full_height, full_width = self.image_array.shape
 
-        u = 1/((np.linspace(1, full_width, full_width)-full_width/2)*(self.sensor_width/full_width))
-        v = 1/((np.linspace(1, full_height, full_height)-full_height/2)*(self.sensor_width/full_width))
+        U,V = np.meshgrid(np.linspace(1, full_width, full_width),
+                          np.linspace(1, full_height, full_height)-full_height/2)
 
-        mask=np.zeros((full_height, full_width), dtype=complex)
-        mask[500:524,620:660] = 1.0
-        display_image(mask, 0.5, "Mask")
+        H = np.sqrt(np.power(U - full_width/2 - 1, 2) + np.power(V - full_height/2 - 1, 2))
+        H = H*(self.sensor_width/full_width)
+        H = np.exp(-1j*math.pi*(1/(self.wavelength*self.distance))*np.power(H,2))
 
-        U, V = np.meshgrid(u, v)
-
-        O = np.fft.fftshift(np.fft.fft2(mask, norm='ortho'))
-        display_image(np.abs(O), 0.5, "Abs of O")
-
-        # H = np.exp(1j*k*self.distance) * np.exp(-1j*math.pi*self.wavelength*self.distance*(np.power(U,2) + np.power(V,2)))
-        H = np.exp(1j * k * self.distance* np.sqrt( 1 - (np.power(U*self.wavelength, 2) + np.power(V*self.wavelength , 2))))
-
-        U = np.fft.ifftshift(np.fft.ifft2(H, norm='ortho'))
-
-        display_image(np.abs(U), 0.5, "Abs of U")
-
-        #TODO: Fresnel transform not working
-
-
+        propagated = (np.fft.ifft2(np.fft.fftshift( self.image_array * H )))
+        return propagated
 
 
 #Helper functions
