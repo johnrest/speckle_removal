@@ -10,24 +10,36 @@ import cmath
 
 def main():
     print("SPECKLE REMOVAL PROJECT")
-    target_folder = "C:/Users/itm/Desktop/DH/2018_08_17/dice_16_walsh"
+    target_folder = "C:/Users/itm/Desktop/DH/2018_07_27/dice_rotating_pattern/"
     target_mask = "holo*"
     reconstruct_prefix = "rec_"
+    focusing_distance = 1.7         #1.7 for dice rotating / 1.3 for dice walsh
+    recon_batch = list()
 
     images_list = get_list_images(target_folder, target_mask)
 
-    holo = Hologram()
-    holo.read_image_file_into_array(images_list[0])
+    for itr, item in enumerate(images_list):
 
-    recon = Reconstruction(holo)
-    prop = recon
-    prop.image_array = recon.propagate(1.3)
-    display_image(abs(prop.image_array), 0.5, "Propagated amplitude")
+        holo = Hologram()
+        holo.read_image_file_into_array(item)
 
-    prop.write_array_into_image_file(os.path.join(target_folder, "rec_01"), ".bmp")
+        if itr == 0:
+            recon = Reconstruction(holo)
+        else:
+            recon = Reconstruction(holo, spectrum_roi=selected_roi)
 
-    #TODO: design behaviour for multiple holograms....load all images VS process and read image by image
-    #TODO: Write speckle computations...new class?
+        recon.filter_hologram(holo)
+        selected_roi = recon.spectrum_roi
+        prop = recon
+        prop.image_array = recon.propagate(focusing_distance)
+        recon_batch.append(prop)
+
+        # prop.write_array_into_image_file(os.path.join(target_folder, reconstruct_prefix+"{:02d}".format(itr)), ".bmp")
+        print("Copying to image: " + os.path.join(target_folder, reconstruct_prefix+"{:02d}".format(itr)), ".bmp")
+
+    # display_image(abs(prop.image_array), 0.5, "Propagated amplitude")
+
+    speckle_correlation_coefficient(recon_batch)
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -50,9 +62,10 @@ class Image:
         self.image_array = np.array(image_array)
 
     def write_array_into_image_file(self, filename, format):
-        """Write np array into an image of specified format"""
+        """Write np array into an image of specified format,
+        writes the abs if the input is complex"""
         if np.iscomplex(self.image_array).any():
-            image = array_to_image(abs(self.image_array))
+            image = array_to_image(np.abs(self.image_array))
         else:
             image = array_to_image(self.image_array)
 
@@ -77,8 +90,9 @@ class Hologram(Image):
         spectrum =  np.log(abs(fourier))
         display_image(spectrum, 0.5, "Spectrum")
 
+
 class Reconstruction(Image):
-    def __init__(self, holo: Hologram, distance=0, spectrum_roi=None):
+    def __init__(self, holo: Hologram, distance=0.0, spectrum_roi=None):
         self.distance = distance
         self.sensor_width = holo.sensor_width
         self.sensor_height = holo.sensor_height
@@ -86,29 +100,26 @@ class Reconstruction(Image):
 
         self.pixel_width = self.distance*self.wavelength/self.sensor_width
         self.pixel_height = self.distance * self.wavelength / self.sensor_height
+        self.spectrum_roi = spectrum_roi
 
         super(Reconstruction, self).__init__()
-
-        if spectrum_roi == None:
-            self.filter_hologram(holo)
-        else:
-            self.spectrum_roi = spectrum_roi
 
     def filter_hologram(self, holo: Hologram):
         fourier = np.fft.fftshift(np.fft.fft2(holo.image_array, norm='ortho'))
         spectrum = np.log(abs(fourier))
         spectrum = array_to_image(spectrum)
 
-        self.spectrum_roi = cv2.selectROI(spectrum)
-        r = self.spectrum_roi
+        if self.spectrum_roi is None:
+            # Select area and press enter for continuing
+            self.spectrum_roi = cv2.selectROI(img=spectrum, windowName="Select filter and press Enter")
 
-        #Select area and press enter for continuing
+        r = self.spectrum_roi
         fourier_cropped = fourier[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
 
-        full_height, full_width  = holo.image_array.shape
+        full_height, full_width = holo.image_array.shape
         cropped_height, cropped_width = fourier_cropped.shape
 
-        #Padding with zeros to expand to original size
+        # Padding with zeros to expand to original size
         filtered = np.zeros((full_height, full_width), dtype=complex)
         init_width = int(full_width/2 - round(cropped_width/2))
         init_height = int(full_height/2 - round(cropped_height/2))
@@ -139,8 +150,7 @@ class Reconstruction(Image):
         propagated = (np.fft.ifft2(np.fft.fftshift( self.image_array * H )))
         return propagated
 
-
-#Helper functions
+# Helper functions
 def display_image(array, scale=1, title="Image"):
     image = array_to_image(array)
     height, width = image.shape
@@ -155,6 +165,27 @@ def array_to_image(array):
     array *= 255 / array.max()
     image = array.astype(np.uint8)
     return image
+
+
+def speckle_correlation_coefficient(image_batch):
+
+    cc_speckle = np.empty((len(image_batch), len(image_batch)),dtype=float)
+    for ii, image_p in enumerate(image_batch):
+        for jj, image_q in enumerate(image_batch):
+            Ip = np.abs(image_p.image_array)
+            Iq = np.abs(image_q.image_array)
+            cc_speckle[ii, jj] = np.abs(np.sum((Ip-np.mean(Ip))*(Iq-np.mean(Iq))))\
+                                 /np.sqrt(np.sum(np.power(Ip-np.mean(Ip), 2)) * np.sum(np.power(Iq-np.mean(Iq), 2)))
+            print(cc_speckle[ii, jj])
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(cc_speckle, origin='lower')
+    fig.colorbar(im)
+    plt.show()
+
+
+    # TODO: include a ROI selector on the reconstruted images (decrease time for computation)
+
 
 
 if __name__ == "__main__":
