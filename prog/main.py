@@ -10,7 +10,7 @@ import cmath
 
 def main():
     print("SPECKLE REMOVAL PROJECT")
-    target_folder = "C:/Users/itm/Desktop/DH/2018_07_27/dice_rotating_pattern/"
+    target_folder = "C:/Users/itm/Desktop/DH/2018_07_27/small_coin_rotating_pattern/"
     target_mask = "holo*"
     reconstruct_prefix = "rec_"
     focusing_distance = 1.7         #1.7 for dice rotating / 1.3 for dice walsh
@@ -185,7 +185,7 @@ def speckle_correlation_coefficient(image_batch):
 
 
     # TODO: include a ROI selector on the reconstruted images (decrease time for computation)
-
+    # TODO: helper function to compute speckle contrast
 
 
 if __name__ == "__main__":
