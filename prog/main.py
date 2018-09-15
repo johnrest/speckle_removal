@@ -1,12 +1,13 @@
 # main file
 # All units in meters
-import numpy as np
-from matplotlib import pyplot as plt
-import os, glob
-from PIL import Image as p_Image
-import cv2
-import math
-import cmath
+# import numpy as np
+# from matplotlib import pyplot as plt
+# import os, glob
+# from PIL import Image as p_Image
+# import cv2
+# import math
+
+from prog import *
 
 def main():
     print("SPECKLE REMOVAL PROJECT")
