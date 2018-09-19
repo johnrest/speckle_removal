@@ -7,7 +7,7 @@
 # import cv2
 # import math
 
-from prog import *
+from speck_rem import *
 
 def main():
     print("SPECKLE REMOVAL PROJECT")

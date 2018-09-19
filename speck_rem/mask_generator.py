@@ -1,6 +1,6 @@
 #Compute the mask to project onto CCD
-from prog import *
-from prog.main import *
+from speck_rem import *
+from speck_rem.main import *
 
 def main():
     Phi = Mask()
@@ -8,8 +8,6 @@ def main():
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-
-
 
 class Mask(Image):
     def __init__(self, width=1920, height=1080, pitch=7.6e-6):
