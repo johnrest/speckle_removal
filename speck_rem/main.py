@@ -11,10 +11,10 @@ from speck_rem import *
 
 def main():
     print("SPECKLE REMOVAL PROJECT")
-    target_folder = "C:/Users/itm/Desktop/DH/2018_07_27/small_coin_rotating_pattern/"
+    target_folder = "C:/Users/itm/Desktop/DH/2018_09_21/dice_setup/"
     target_mask = "holo*"
     reconstruct_prefix = "rec_"
-    focusing_distance = 1.7         #1.7 for dice rotating / 1.3 for dice walsh
+    focusing_distance = 1.3         #1.7 for dice rotating / 1.3 for dice walsh
     recon_batch = list()
 
     images_list = get_list_images(target_folder, target_mask)
@@ -35,14 +35,14 @@ def main():
         prop.image_array = recon.propagate(focusing_distance)
         recon_batch.append(prop)
 
-        # prop.write_array_into_image_file(os.path.join(target_folder, reconstruct_prefix+"{:02d}".format(itr)), ".bmp")
+        prop.write_array_into_image_file(os.path.join(target_folder, reconstruct_prefix+"{:02d}".format(itr)), ".bmp")
         print("Copying to image: " + os.path.join(target_folder, reconstruct_prefix+"{:02d}".format(itr)), ".bmp")
 
     # display_image(abs(prop.image_array), 0.5, "Propagated amplitude")
 
     speckle_correlation_coefficient(recon_batch)
 
-    cv2.waitKey(0)
+    # cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 
@@ -70,7 +70,8 @@ class Image:
         else:
             image = array_to_image(self.image_array)
 
-        cv2.imwrite(filename+format, image)
+        cv2.imwrite(filename+format, image, [cv2.IMWRITE_PNG_BILEVEL, 1])
+
 
     def display(self):
         """Display the image through pillow"""
