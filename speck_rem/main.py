@@ -11,13 +11,15 @@ from speck_rem import *
 
 def main():
     print("SPECKLE REMOVAL PROJECT")
-    target_folder = "C:/Users/itm/Desktop/DH/2018_09_21/dice_setup/"
-    target_mask = "holo*"
+    target_folder = "C:/Users/itm/Desktop/DH/2018_09_21/dice_rot_fixed_freq"
+    target_filename = "holo"
     reconstruct_prefix = "rec_"
     focusing_distance = 1.3         #1.7 for dice rotating / 1.3 for dice walsh
     recon_batch = list()
 
-    images_list = get_list_images(target_folder, target_mask)
+    extract_frames_from_video(target_folder, "holo.avi", target_filename)
+
+    images_list = get_list_images(target_folder, target_filename+"_0*")
 
     for itr, item in enumerate(images_list):
 
@@ -28,6 +30,7 @@ def main():
             recon = Reconstruction(holo)
         else:
             recon = Reconstruction(holo, spectrum_roi=selected_roi)
+
 
         recon.filter_hologram(holo)
         selected_roi = recon.spectrum_roi
@@ -40,9 +43,9 @@ def main():
 
     # display_image(abs(prop.image_array), 0.5, "Propagated amplitude")
 
-    speckle_correlation_coefficient(recon_batch)
+    speckle_correlation_coefficient(recon_batch, roi=True)
 
-    # cv2.waitKey(0)
+    cv2.waitKey(0)
     cv2.destroyAllWindows()
 
 
@@ -92,7 +95,6 @@ class Hologram(Image):
         spectrum =  np.log(abs(fourier))
         display_image(spectrum, 0.5, "Spectrum")
 
-
 class Reconstruction(Image):
     def __init__(self, holo: Hologram, distance=0.0, spectrum_roi=None):
         self.distance = distance
@@ -111,9 +113,11 @@ class Reconstruction(Image):
         spectrum = np.log(abs(fourier))
         spectrum = array_to_image(spectrum)
 
+        windowName = "Select filter and press Enter"
         if self.spectrum_roi is None:
             # Select area and press enter for continuing
-            self.spectrum_roi = cv2.selectROI(img=spectrum, windowName="Select filter and press Enter")
+            self.spectrum_roi = cv2.selectROI(img=spectrum, windowName=windowName)
+        cv2.destroyWindow(windowName)
 
         r = self.spectrum_roi
         fourier_cropped = fourier[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
@@ -163,19 +167,28 @@ def display_image(array, scale=1, title="Image"):
 
 
 def array_to_image(array):
+    array = array.astype(np.float64)
     array -= array.min()
     array *= 255 / array.max()
     image = array.astype(np.uint8)
     return image
 
 
-def speckle_correlation_coefficient(image_batch):
+def speckle_correlation_coefficient(image_batch, roi=True):
+
+    # if roi is True:
+        # Select area and press enter for continuing
+        # windowName = "Select ROI and press Enter"
+        # display_image(np.abs(image_batch[2].image_array), 0.5, "recon")
+        # r = cv2.selectROI(img=np.abs(image_batch[2].image_array), windowName=windowName, fromCenter=False)
 
     cc_speckle = np.empty((len(image_batch), len(image_batch)),dtype=float)
     for ii, image_p in enumerate(image_batch):
         for jj, image_q in enumerate(image_batch):
             Ip = np.abs(image_p.image_array)
             Iq = np.abs(image_q.image_array)
+            # Ip = np.abs(image_p.image_array[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])])
+            # Iq = np.abs(image_q.image_array[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])])
             cc_speckle[ii, jj] = np.abs(np.sum((Ip-np.mean(Ip))*(Iq-np.mean(Iq))))\
                                  /np.sqrt(np.sum(np.power(Ip-np.mean(Ip), 2)) * np.sum(np.power(Iq-np.mean(Iq), 2)))
             print(cc_speckle[ii, jj])
@@ -185,10 +198,24 @@ def speckle_correlation_coefficient(image_batch):
     fig.colorbar(im)
     plt.show()
 
-
-    # TODO: include a ROI selector on the reconstruted images (decrease time for computation)
+    # TODO: attempt for ROI selection now working
     # TODO: helper function to compute speckle contrast
 
+
+def extract_frames_from_video(target_folder, video_filename, image_name_mask):
+    """ Extract all frames from a video and store as png files in the same folder"""
+
+    video_capture = cv2.VideoCapture(os.path.join(target_folder, video_filename))
+    success, image = video_capture.read()
+    print("First frame read", success)
+    count = 0
+    while success:
+        fname = os.path.join(target_folder, image_name_mask+"_{:03d}".format(count)+".png")
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        cv2.imwrite( fname, image)  # save frame as PNG file
+        success, image = video_capture.read()
+        print("Reading next frame: ", success)
+        count += 1
 
 if __name__ == "__main__":
     main()
