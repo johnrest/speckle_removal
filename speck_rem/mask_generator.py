@@ -4,14 +4,14 @@ from speck_rem.main import *
 
 
 def main():
-    target_folder = "C:/Users/itm/Desktop/DH/2018_09_21/dice_freq_fixed_rot"
+    target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
 
     mask_image_prefix = "pattern_"
 
-    angle_list =  np.linspace(0.0, math.pi/2.0, num=30, endpoint=True)
-    angle = math.pi/4.0
-    period = 12
-    period_list =  np.linspace(2, 12, num=6, endpoint=True)
+    #angle_list =  np.linspace(0.0, np.pi/2.0, num=5, endpoint=True)
+    angle = math.pi/2.0
+    #period = 20
+    period_list =  np.linspace(8, 20, num=7, endpoint=True)
 
     for itr, a in enumerate(period_list):
         mask = Mask()
@@ -25,8 +25,6 @@ def main():
     # im = ax.imshow(mask.image_array, origin='lower')
     # fig.colorbar(im)
     # plt.show()
-
-
 
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
@@ -47,14 +45,21 @@ class Mask(Image):
                 theta: rotation angle with respect to a horizontal
                 period: Period in pixels
         """
-        u, v = np.meshgrid(np.linspace(1, self.width, self.width) - self.width/2,
-                          np.linspace(1, self.height, self.height) - self.height/2)
+        # u, v = np.meshgrid(np.linspace(0, self.width, self.width, endpoint=False) - (self.width/2-1) - 1/2,
+        #                   np.linspace(0, self.height, self.height, endpoint=False) - (self.height/2-1) - 1/2)
 
-        _ = np.round(np.cos((2*math.pi/period) * (u*math.cos(theta) + v*math.sin(theta))), decimals=10)
+        u, v = np.meshgrid(np.linspace(0, self.width, self.width, endpoint=False) + 1/2,
+                          np.linspace(0, self.height, self.height, endpoint=False) + 1/2)
 
-        self.image_array = 1/2 + 1/2 * np.where( _ > 0, 1.0, -1.0)
 
+        #_ = np.round(np.cos((2*np.pi/period) * (u*math.cos(theta) + v*math.sin(theta))), decimals=10)
+        #self.image_array = (1/2) + (1/2) * np.where( _ >= 0, 1.0, -1.0)
 
+        temp = (u * np.round(np.cos(theta), decimals=2) + v * np.round(np.sin(theta), decimals=2))
+        temp2 = np.cos((2.0 * math.pi / period) * temp)
+        self.image_array = 1/2 + 1/2 * np.sign(temp2)
+
+        #self.image_array = 1/2 + 1/2 * np.sign(np.cos((2 * np.pi / period) * (u * np.cos(theta) + v * np.sin(theta))))
 
 
 if __name__ == "__main__":

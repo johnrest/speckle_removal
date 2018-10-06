@@ -11,7 +11,7 @@ from speck_rem import *
 
 def main():
     print("SPECKLE REMOVAL PROJECT")
-    target_folder = "C:/Users/itm/Desktop/DH/2018_09_21/dice_rot_fixed_freq"
+    target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
     target_filename = "holo"
     reconstruct_prefix = "rec_"
     focusing_distance = 1.3         #1.7 for dice rotating / 1.3 for dice walsh
@@ -176,19 +176,23 @@ def array_to_image(array):
 
 def speckle_correlation_coefficient(image_batch, roi=True):
 
-    # if roi is True:
+    if roi is True:
         # Select area and press enter for continuing
         # windowName = "Select ROI and press Enter"
         # display_image(np.abs(image_batch[2].image_array), 0.5, "recon")
         # r = cv2.selectROI(img=np.abs(image_batch[2].image_array), windowName=windowName, fromCenter=False)
+        r = [400,300,450,320]
+        # Ip = np.abs(np.abs(image_batch[0].image_array)[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])])
+        # display_image(Ip, 0.5, "image")
 
     cc_speckle = np.empty((len(image_batch), len(image_batch)),dtype=float)
+
     for ii, image_p in enumerate(image_batch):
         for jj, image_q in enumerate(image_batch):
-            Ip = np.abs(image_p.image_array)
-            Iq = np.abs(image_q.image_array)
-            # Ip = np.abs(image_p.image_array[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])])
-            # Iq = np.abs(image_q.image_array[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])])
+            # Ip = np.abs(image_p.image_array)
+            # Iq = np.abs(image_q.image_array)
+            Ip = np.abs(image_p.image_array[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])])
+            Iq = np.abs(image_q.image_array[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])])
             cc_speckle[ii, jj] = np.abs(np.sum((Ip-np.mean(Ip))*(Iq-np.mean(Iq))))\
                                  /np.sqrt(np.sum(np.power(Ip-np.mean(Ip), 2)) * np.sum(np.power(Iq-np.mean(Iq), 2)))
             print(cc_speckle[ii, jj])
@@ -216,6 +220,10 @@ def extract_frames_from_video(target_folder, video_filename, image_name_mask):
         success, image = video_capture.read()
         print("Reading next frame: ", success)
         count += 1
+
+    #Hard fix for removing extra frame fron Trigger base acquisition.
+    #Must delete last image since it repeats the first frame
+    os.remove(fname)
 
 if __name__ == "__main__":
     main()
