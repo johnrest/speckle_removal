@@ -17,33 +17,63 @@ def main():
     focusing_distance = 1.3         #1.7 for dice rotating / 1.3 for dice walsh
     recon_batch = list()
 
-    extract_frames_from_video(target_folder, "holo.avi", target_filename)
+    # extract_frames_from_video(target_folder, "holo.avi", target_filename)
 
-    images_list = get_list_images(target_folder, target_filename+"_0*")
+    # images_list = get_list_images(target_folder, target_filename+"_0*")
 
-    for itr, item in enumerate(images_list):
+    # for itr, item in enumerate(images_list):
+    #
+    #     holo = Hologram()
+    #     holo.read_image_file_into_array(item)
+    #
+    #     if itr == 0:
+    #         recon = Reconstruction(holo)
+    #     else:
+    #         recon = Reconstruction(holo, spectrum_roi=selected_roi)
+    #
+    #     recon.filter_hologram(holo)
+    #     selected_roi = recon.spectrum_roi
+    #     prop = recon
+    #     prop.image_array = recon.propagate(focusing_distance)
+    #     recon_batch.append(prop)
+    #
+    #     prop.write_array_into_image_file(os.path.join(target_folder, reconstruct_prefix+"{:02d}".format(itr)), ".bmp")
+    #     print("Copying to image: " + os.path.join(target_folder, reconstruct_prefix+"{:02d}".format(itr)), ".bmp")
+
+    # display_image(abs(prop.image_array), 0.5, "Propagated amplitude")
+
+    # speckle_correlation_coefficient(recon_batch, roi=True)
+
+    ## TEMP: attempt to implement a phase diffuser for single hologram reduction
+    images_list = get_list_images(target_folder, target_filename + "_0*")
+    # for itr, item in enumerate(images_list):
+    for itr, item in enumerate(range(0,10)):
 
         holo = Hologram()
-        holo.read_image_file_into_array(item)
+        holo.read_image_file_into_array(images_list[0])
+        holo.phase_modulate()
 
         if itr == 0:
             recon = Reconstruction(holo)
         else:
             recon = Reconstruction(holo, spectrum_roi=selected_roi)
 
-
         recon.filter_hologram(holo)
         selected_roi = recon.spectrum_roi
         prop = recon
         prop.image_array = recon.propagate(focusing_distance)
+
+        # display_image(abs(prop.image_array), 0.5, "Propagated amplitude " + "{:2d}".format(itr))
         recon_batch.append(prop)
+        print("Finished iteration: ", itr)
 
-        prop.write_array_into_image_file(os.path.join(target_folder, reconstruct_prefix+"{:02d}".format(itr)), ".bmp")
-        print("Copying to image: " + os.path.join(target_folder, reconstruct_prefix+"{:02d}".format(itr)), ".bmp")
 
-    # display_image(abs(prop.image_array), 0.5, "Propagated amplitude")
+    average = np.zeros(holo.image_array.shape)
+    for img in recon_batch:
+        average = np.add(average, abs(img.image_array))
 
-    speckle_correlation_coefficient(recon_batch, roi=True)
+    display_image(average, 0.5, "sum")
+
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -94,6 +124,21 @@ class Hologram(Image):
         fourier = np.fft.fft2(self.image_array, norm='ortho')
         spectrum =  np.log(abs(fourier))
         display_image(spectrum, 0.5, "Spectrum")
+
+    def phase_modulate(self):
+        # modulation_array = np.exp(-1j*np.pi*np.random.randint(2, size=self.image_array.shape))
+        full_width, full_height = self.image_array.shape
+        scale = 16
+        GX = full_height/scale
+        GY = full_width/scale
+
+        # modulation_array = np.exp(-1j * np.pi * np.random.randint(2, size=(scale,scale)))
+        modulation_array = np.random.randint(2, size=(scale,scale))
+        print(modulation_array.shape)
+        modulation_array = modulation_array.repeat(GY, axis=0).repeat(GX, axis=1)
+        print(modulation_array.shape)
+        display_image(np.abs(modulation_array), 0.5, "mod")
+        self.image_array = np.multiply(self.image_array, modulation_array)
 
 class Reconstruction(Image):
     def __init__(self, holo: Hologram, distance=0.0, spectrum_roi=None):
