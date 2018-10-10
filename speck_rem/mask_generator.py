@@ -1,7 +1,6 @@
 #Compute the mask to project onto CCD
 
-from speck_rem.main import *
-
+from speck_rem.holography import *
 
 def main():
     target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
@@ -10,6 +9,7 @@ def main():
 
     #angle_list =  np.linspace(0.0, np.pi/2.0, num=5, endpoint=True)
     angle = math.pi/2.0
+
     #period = 20
     period_list =  np.linspace(8, 20, num=7, endpoint=True)
 
