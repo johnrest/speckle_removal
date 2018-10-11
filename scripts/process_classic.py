@@ -2,7 +2,6 @@
 
 from speck_rem import *
 
-print("SPECKLE REMOVAL PROJECT")
 target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
 holo_name_mask = "holo_0*"
 reconstruct_prefix = "rec_"

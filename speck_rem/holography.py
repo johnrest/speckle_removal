@@ -1,6 +1,8 @@
 # File to handle all holography processes
 # All units in meters
 
+# import speck_rem
+from speck_rem import *
 from speck_rem.admin import *
 
 def main():
@@ -17,11 +19,17 @@ class Image:
         image_array = p_Image.open(filename)
         self.image_array = np.array(image_array)
 
+        # Padding to produce holograms
+        h, w = self.image_array.shape
+        self.image_array = np.pad(self.image_array, ((int((w-h)/2), int((w-h)/2)), (0, 0)), 'reflect')
+
+
     def write_array_into_image_file(self, filename, format):
         """Write np array into an image of specified format,
         writes the abs if the input is complex"""
         if np.iscomplex(self.image_array).any():
             image = array_to_image(np.abs(self.image_array))
+            image = array_to_image(np.angle(self.image_array))
         else:
             image = array_to_image(self.image_array)
 
@@ -46,21 +54,6 @@ class Hologram(Image):
         fourier = np.fft.fft2(self.image_array, norm='ortho')
         spectrum =  np.log(abs(fourier))
         display_image(spectrum, 0.5, "Spectrum")
-
-    def phase_modulate(self):
-        # modulation_array = np.exp(-1j*np.pi*np.random.randint(2, size=self.image_array.shape))
-        full_width, full_height = self.image_array.shape
-        scale = 16
-        GX = full_height/scale
-        GY = full_width/scale
-
-        # modulation_array = np.exp(-1j * np.pi * np.random.randint(2, size=(scale,scale)))
-        modulation_array = np.random.randint(2, size=(scale,scale))
-        print(modulation_array.shape)
-        modulation_array = modulation_array.repeat(GY, axis=0).repeat(GX, axis=1)
-        print(modulation_array.shape)
-        display_image(np.abs(modulation_array), 0.5, "mod")
-        self.image_array = np.multiply(self.image_array, modulation_array)
 
 class Reconstruction(Image):
     def __init__(self, holo: Hologram, distance=0.0, spectrum_roi=None):
@@ -122,6 +115,23 @@ class Reconstruction(Image):
 
         propagated = (np.fft.ifft2(np.fft.fftshift( self.image_array * H )))
         return propagated
+
+
+class RandomPhaseMask(Image):
+    def __init__(self, image_width=1280, image_height=1280):
+        self.image_width = image_width
+        self.image_height = image_height
+
+        super(RandomPhaseMask, self).__init__()
+
+    def create(self, grain=1280/16):
+        # modulation_array = np.exp(-1j*np.pi*np.random.randint(2, size=self.image_array.shape))
+        full_width, full_height = (self.image_width, self.image_height)
+        scale = int(full_width/grain)
+        modulation_array = np.exp(1j * np.pi * np.random.randint(2, size=(scale,scale)))        #phase
+        # modulation_array = np.random.randint(2, size=(scale,scale))                           #amplitude
+        self.image_array = modulation_array.repeat(grain, axis=0).repeat(grain, axis=1)
+
 
 if __name__ == "__main__":
     main()

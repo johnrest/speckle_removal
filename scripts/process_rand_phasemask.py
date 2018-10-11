@@ -1,13 +1,30 @@
 # Process a folder/file with the random phase mask applied to the hologram.
 
-## TEMP: attempt to implement a phase diffuser for single hologram reduction
-images_list = get_list_images(target_folder, target_filename + "_0*")
-# for itr, item in enumerate(images_list):
+from speck_rem import *
+
+target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
+holo_name_mask = "holo_0*"
+phasemask_prefix = "phasemask_";
+reconstruct_prefix = "rec_"
+focusing_distance = 1.3
+recon_batch = list()
+reconstruct_format = ".bmp"
+
+images_list = get_list_images(target_folder, holo_name_mask)
+
 for itr, item in enumerate(range(0, 10)):
+    print("Processing hologram :", item)
+    print("... ... ...")
 
     holo = Hologram()
     holo.read_image_file_into_array(images_list[0])
-    holo.phase_modulate()
+
+    phasemask = RandomPhaseMask()
+    phasemask.create(1280/4)
+    phasemask_filename = os.path.join(target_folder, phasemask_prefix + "{:3d}".format(itr))
+    phasemask.write_array_into_image_file(phasemask_filename, reconstruct_format)
+
+    holo.image_array = np.multiply(holo.image_array, phasemask.image_array)
 
     if itr == 0:
         recon = Reconstruction(holo)
@@ -31,12 +48,4 @@ display_image(average, 0.5, "sum")
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
-print("SPECKLE REMOVAL PROJECT")
-target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
-target_filename = "holo"
-reconstruct_prefix = "rec_"
-focusing_distance = 1.3  # 1.7 for dice rotating / 1.3 for dice walsh
-recon_batch = list()
-
 

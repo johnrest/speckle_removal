@@ -1,3 +1,12 @@
+# Script to extract frames from an avi video produced by the triggered acquisition
 
+from speck_rem import *
 
-extract_frames_from_video(target_folder, "holo.avi", target_filename)
+target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
+video_filename = "holo.avi"
+image_filename_mask = "holo_"
+
+print("Extracting frames...")
+extract_frames_from_video(target_folder, video_filename, image_filename_mask)
+print("Finished.")
+

@@ -1,6 +1,5 @@
 # Tools related to speckle computations
 
-import speck_rem
 from speck_rem import *
 
 def speckle_correlation_coefficient(image_batch, roi=True):
