@@ -41,8 +41,18 @@ def extract_frames_from_video(target_folder, video_filename, image_name_mask):
         success, image = video_capture.read()
         count += 1
 
-    #Hard fix for removing extra frame fron Trigger base acquisition.
+    #Hard fix for removing extra frame fron trigger base acquisition.
     #Must delete last image since it repeats the first frame
     os.remove(fname)
 
     #TODO: imporve this hard fix
+
+
+def select_roi(array, wName="Select rectangle"):
+    """ Use a cv2 tool to select a ROI from a numpy array"""
+    image = array_to_image(array)
+    cv2.namedWindow(wName, cv2.WINDOW_NORMAL)
+    roi = cv2.selectROI(img=image, windowName=wName, fromCenter=False)
+    cv2.destroyWindow(wName)
+    return roi
+

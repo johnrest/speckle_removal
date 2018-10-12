@@ -31,5 +31,21 @@ def speckle_correlation_coefficient(image_batch, roi=True):
     fig.colorbar(im)
     plt.show()
 
+
+def speckle_contrast(imagebatch, roi=[]):
+
+    result = []
+    for itr, item in enumerate(imagebatch):
+        if not roi:
+            roi = select_roi(np.abs(item.image_array), "Select a ROI to compute the speckle contrast")
+
+        selection = np.abs(item.image_array)[int(roi[1]): int(roi[1] + roi[3]), int(roi[0]): int(roi[0] + roi[2])]
+
+        result.append(np.std(selection)/np.average(selection))
+
+    return result
+
+
+
     # TODO: attempt for ROI selection now working
     # TODO: helper function to compute speckle contrast

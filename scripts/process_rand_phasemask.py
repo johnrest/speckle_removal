@@ -4,7 +4,7 @@ from speck_rem import *
 
 target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
 holo_name_mask = "holo_0*"
-phasemask_prefix = "phasemask_";
+phasemask_prefix = "phasemask_"
 reconstruct_prefix = "rec_"
 focusing_distance = 1.3
 recon_batch = list()
@@ -45,6 +45,15 @@ for img in recon_batch:
     average = np.add(average, abs(img.image_array))
 
 display_image(average, 0.5, "sum")
+
+# final = recon_batch[0]
+# final.image_array = average
+# recon_batch.append(final)
+
+sc = speckle_contrast(recon_batch)
+print("Speckle contrasts for the individual images are: ", sc)
+
+
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()

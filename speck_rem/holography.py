@@ -27,9 +27,10 @@ class Image:
     def write_array_into_image_file(self, filename, format):
         """Write np array into an image of specified format,
         writes the abs if the input is complex"""
+        # TODO: introduce functionality to write into file amplitude or phase
         if np.iscomplex(self.image_array).any():
             image = array_to_image(np.abs(self.image_array))
-            image = array_to_image(np.angle(self.image_array))
+            # image = array_to_image(np.angle(self.image_array))
         else:
             image = array_to_image(self.image_array)
 
@@ -70,14 +71,13 @@ class Reconstruction(Image):
 
     def filter_hologram(self, holo: Hologram):
         fourier = np.fft.fftshift(np.fft.fft2(holo.image_array, norm='ortho'))
-        spectrum = np.log(abs(fourier))
+        spectrum = np.log(np.abs(fourier))
         spectrum = array_to_image(spectrum)
 
-        windowName = "Select filter and press Enter"
+
         if self.spectrum_roi is None:
             # Select area and press enter for continuing
-            self.spectrum_roi = cv2.selectROI(img=spectrum, windowName=windowName)
-        cv2.destroyWindow(windowName)
+            self.spectrum_roi = select_roi(spectrum, "Select a ROI to compute the speckle contrast")
 
         r = self.spectrum_roi
         fourier_cropped = fourier[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
@@ -135,4 +135,3 @@ class RandomPhaseMask(Image):
 
 if __name__ == "__main__":
     main()
-

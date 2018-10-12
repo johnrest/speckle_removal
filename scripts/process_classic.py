@@ -21,10 +21,10 @@ for itr, item in enumerate(images_list):
     if itr == 0:                                #select ROI for first hologram
         recon = Reconstruction(holo)
     else:                                       #Use selected ROI for the rest of holograms
-        recon = Reconstruction(holo, spectrum_roi=selected_roi)
+        recon = Reconstruction(holo, spectrum_roi=roi)
 
     recon.filter_hologram(holo)
-    selected_roi = recon.spectrum_roi
+    roi = recon.spectrum_roi
     prop = recon
     prop.image_array = recon.propagate(focusing_distance)
     recon_batch.append(prop)
@@ -35,7 +35,10 @@ for itr, item in enumerate(images_list):
     print("Copying to image: " + current_file + reconstruct_format)
     prop.write_array_into_image_file(current_file, reconstruct_format)
 
-speckle_correlation_coefficient(recon_batch, roi=True)
+# speckle_correlation_coefficient(recon_batch, roi=True)
+
+sc = speckle_contrast(recon_batch)
+print("Speckle contrast is: ", sc)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
