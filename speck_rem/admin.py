@@ -55,4 +55,3 @@ def select_roi(array, wName="Select rectangle"):
     roi = cv2.selectROI(img=image, windowName=wName, fromCenter=False)
     cv2.destroyWindow(wName)
     return roi
-

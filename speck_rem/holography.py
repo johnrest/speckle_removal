@@ -27,7 +27,6 @@ class Image:
     def write_array_into_image_file(self, filename, format):
         """Write np array into an image of specified format,
         writes the abs if the input is complex"""
-        # TODO: introduce functionality to write into file amplitude or phase
         if np.iscomplex(self.image_array).any():
             image = array_to_image(np.abs(self.image_array))
             # image = array_to_image(np.angle(self.image_array))
@@ -35,6 +34,11 @@ class Image:
             image = array_to_image(self.image_array)
 
         cv2.imwrite(filename+format, image, [cv2.IMWRITE_PNG_BILEVEL, 1])
+
+    def write_phase_into_image_file(self, filename, format):
+        """Write the phase for a np array into an image of specified format"""
+        image = array_to_image(np.angle(self.image_array))
+        cv2.imwrite(filename + format, image, [cv2.IMWRITE_PNG_BILEVEL, 1])
 
     def display(self):
         """Display the image through pillow"""

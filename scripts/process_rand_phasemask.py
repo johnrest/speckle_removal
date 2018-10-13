@@ -9,10 +9,12 @@ reconstruct_prefix = "rec_"
 focusing_distance = 1.3
 recon_batch = list()
 reconstruct_format = ".bmp"
+N = 20
 
 images_list = get_list_images(target_folder, holo_name_mask)
 
-for itr, item in enumerate(range(0, 10)):
+
+for itr, item in enumerate(range(0, N)):
     print("Processing hologram :", item)
     print("... ... ...")
 
@@ -22,7 +24,7 @@ for itr, item in enumerate(range(0, 10)):
     phasemask = RandomPhaseMask()
     phasemask.create(1280/4)
     phasemask_filename = os.path.join(target_folder, phasemask_prefix + "{:3d}".format(itr))
-    phasemask.write_array_into_image_file(phasemask_filename, reconstruct_format)
+    phasemask.write_phase_into_image_file(phasemask_filename, reconstruct_format)
 
     holo.image_array = np.multiply(holo.image_array, phasemask.image_array)
 
@@ -36,24 +38,48 @@ for itr, item in enumerate(range(0, 10)):
     prop = recon
     prop.image_array = recon.propagate(focusing_distance)
 
-    # display_image(abs(prop.image_array), 0.5, "Propagated amplitude " + "{:2d}".format(itr))
+    current_file = os.path.join(target_folder, reconstruct_prefix + "{:02d}".format(itr))
+    print("Copying to image: " + current_file + reconstruct_format)
+    prop.write_array_into_image_file(current_file, reconstruct_format)
+
     recon_batch.append(prop)
     print("Finished iteration: ", itr)
 
-average = np.zeros(holo.image_array.shape)
-for img in recon_batch:
-    average = np.add(average, abs(img.image_array))
+#Compute the sum of amplitudes as final image and compute the speckle contrast
+amplitude_sum = Image()
+amplitude_sum.image_array = np.abs(prop.image_array)
+speckle_contrast_list = []
 
-display_image(average, 0.5, "sum")
+roi = select_roi(np.abs(amplitude_sum.image_array), "Select ROI to compute speckle contrast")
 
-# final = recon_batch[0]
-# final.image_array = average
-# recon_batch.append(final)
+for itr, item in enumerate(recon_batch):
+        amplitude_sum.image_array += np.abs(item.image_array)
+        speckle_contrast_list.append(speckle_contrast_amp(amplitude_sum.image_array, roi))
 
-sc = speckle_contrast(recon_batch)
-print("Speckle contrasts for the individual images are: ", sc)
+print("Copying final image")
+amplitude_sum.write_array_into_image_file(os.path.join(target_folder, "amplitude_sum"), reconstruct_format)
+
+# red dashes for theoretical and blue squares for experimental
+t = np.arange(1, N+1)
+plt.plot(t, speckle_contrast_list/np.max(speckle_contrast_list), 'bs', t, 1.0/np.sqrt(t), 'r--')
+plt.title("Blue: Exp, Red: T")
 
 
+# OLD:
+# sc = speckle_contrast(recon_batch)
+# print("Speckle contrasts for the individual images are: ", sc)
+
+
+#Compute and plot the correlation coefficient matrix
+print("Computing correlation matrix")
+cc_speckle = speckle_correlation_coefficient(recon_batch, roi=True)
+fig, ax = plt.subplots()
+im = ax.imshow(cc_speckle, origin='lower')
+fig.colorbar(im)
+plt.title("Correlation coefficient matrix")
+
+
+plt.show()
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()

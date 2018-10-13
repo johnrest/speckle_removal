@@ -2,7 +2,7 @@
 
 from speck_rem import *
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
+target_folder = "C:/Users/itm/Desktop/DH/2018_09_21/dice_rot_fixed_freq"
 holo_name_mask = "holo_0*"
 reconstruct_prefix = "rec_"
 focusing_distance = 1.3
@@ -35,10 +35,37 @@ for itr, item in enumerate(images_list):
     print("Copying to image: " + current_file + reconstruct_format)
     prop.write_array_into_image_file(current_file, reconstruct_format)
 
-# speckle_correlation_coefficient(recon_batch, roi=True)
 
-sc = speckle_contrast(recon_batch)
-print("Speckle contrast is: ", sc)
+#Compute the sum of amplitudes as final image and compute the speckle contrast
+amplitude_sum = Image()
+amplitude_sum.image_array = np.abs(prop.image_array)
+speckle_contrast_list = []
 
+roi = select_roi(np.abs(amplitude_sum.image_array), "Select ROI to compute speckle contrast")
+
+for itr, item in enumerate(recon_batch):
+        amplitude_sum.image_array += np.abs(item.image_array)
+        speckle_contrast_list.append(speckle_contrast_amp(amplitude_sum.image_array, roi))
+
+print("Copying final image")
+amplitude_sum.write_array_into_image_file(os.path.join(target_folder, "amplitude_sum"), reconstruct_format)
+
+# red dashes for theoretical and blue squares for experimental
+t = np.arange(1, len(images_list)+1)
+plt.plot(t, speckle_contrast_list/np.max(speckle_contrast_list), 'bs', t, 1.0/np.sqrt(t), 'r--')
+plt.title("Blue: Exp, Red: T")
+
+#Compute and plot the correlation coefficient matrix
+print("Computing correlation matrix")
+cc_speckle = speckle_correlation_coefficient(recon_batch, roi=True)
+fig, ax = plt.subplots()
+im = ax.imshow(cc_speckle, origin='lower')
+fig.colorbar(im)
+plt.title("Correlation coefficient matrix")
+
+#OLD: Compute the speckle contrast
+# sc = speckle_contrast(recon_batch)
+# print("Speckle contrast is: ", sc)
+plt.show()
 cv2.waitKey(0)
 cv2.destroyAllWindows()
