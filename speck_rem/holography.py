@@ -136,6 +136,16 @@ class RandomPhaseMask(Image):
         # modulation_array = np.random.randint(2, size=(scale,scale))                           #amplitude
         self.image_array = modulation_array.repeat(grain, axis=0).repeat(grain, axis=1)
 
+    def optimize(self, grain=1280/4, fraction_set=0.01):
+        """Compute a random binary phase mask, with a reduced number of possible black pixels"""
+        print(np.round(np.sqrt(self.image_width*self.image_height*fraction_set)))
+        shape_set = (np.round(np.sqrt(self.image_width*self.image_height*fraction_set)), )*2
+        shape_set = tuple(map(lambda x: int(x), shape_set))
+        print(shape_set)
+        off_positions = np.random.randint(self.image_width+1, size=shape_set)
+        modulation_array = np.ones((self.image_height, self.image_width))
+        modulation_array[off_positions] = 0.0
+
 
 if __name__ == "__main__":
     main()

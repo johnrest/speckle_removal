@@ -2,8 +2,8 @@
 
 from speck_rem import *
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_09_21/dice_rot_fixed_freq"
-holo_name_mask = "holo_0*"
+target_folder = "C:/Users/itm/Desktop/DH/2018_10_17/test"
+holo_name_mask = "holo__0*"
 reconstruct_prefix = "rec_"
 focusing_distance = 1.3
 recon_batch = list()

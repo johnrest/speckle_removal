@@ -2,8 +2,8 @@
 
 from speck_rem import *
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_10_05/test"
-video_filename = "holo.avi"
+target_folder = "C:/Users/itm/Desktop/DH/2018_10_17/test"
+video_filename = "test.avi"
 image_filename_mask = "holo_"
 
 print("Extracting frames...")
