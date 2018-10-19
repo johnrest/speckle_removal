@@ -13,6 +13,6 @@ import math
 from speck_rem.holography import *
 from speck_rem.speckle import *
 from speck_rem.admin import *
-from speck_rem.mask import *
+from speck_rem.dmd import *
 
 

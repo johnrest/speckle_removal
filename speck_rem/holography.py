@@ -138,13 +138,30 @@ class RandomPhaseMask(Image):
 
     def optimize(self, grain=1280/4, fraction_set=0.01):
         """Compute a random binary phase mask, with a reduced number of possible black pixels"""
-        print(np.round(np.sqrt(self.image_width*self.image_height*fraction_set)))
         shape_set = (np.round(np.sqrt(self.image_width*self.image_height*fraction_set)), )*2
         shape_set = tuple(map(lambda x: int(x), shape_set))
-        print(shape_set)
-        off_positions = np.random.randint(self.image_width+1, size=shape_set)
+        off_positions = np.random.randint(self.image_width, size=(2, shape_set[0]*shape_set[1]))
+
         modulation_array = np.ones((self.image_height, self.image_width))
-        modulation_array[off_positions] = 0.0
+        modulation_array[off_positions[0,:], off_positions[1,:]] = 0.0
+        modulation_array = np.exp(1j * np.pi * modulation_array)            # phase
+        self.image_array = modulation_array
+
+
+class FairnessConstraintMask(Image):
+    """Compute a random phase masks under the FC rule"""
+    def __init__(self, image_width=1280, image_height=1280):
+        self.image_width = image_width
+        self.image_height = image_height
+
+        super(FairnessConstraintMask, self).__init__()
+
+    def compute(self, grain=1280/4, pattern=np.ones((1,1))):
+        """The phase mask is computed from the random small pattern designed with the FC rule"""
+        modulation_array = np.exp(1j * np.pi * pattern)        #phase
+        # modulation_array = np.random.randint(2, size=(scale,scale))                           #amplitude
+        self.image_array = modulation_array.repeat(grain, axis=0).repeat(grain, axis=1)
+
 
 
 if __name__ == "__main__":

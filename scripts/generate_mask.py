@@ -1,4 +1,4 @@
-from speck_rem.mask import *
+from speck_rem.dmd import *
 
 target_folder = "C:/Users/itm/Desktop/DH/2018_10_17/test"
 mask_image_prefix = "pattern_"

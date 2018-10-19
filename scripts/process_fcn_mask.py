@@ -1,4 +1,4 @@
-# Process a folder/file with the random phase mask applied to the hologram.
+# Process a folder/file with a fcn phase mask applied to the hologram.
 
 from speck_rem import *
 
@@ -9,21 +9,26 @@ reconstruct_prefix = "rec_"
 focusing_distance = 1.3
 recon_batch = list()
 reconstruct_format = ".bmp"
-N = 20
 
+# Get holograms on target folder
 images_list = get_list_images(target_folder, holo_name_mask)
 
+#Compute pattern batch with the FC rule
+grain = 40
+pattern_size = int(1280/grain)
+number_pattern_images = (pattern_size*pattern_size)/64
+pattern_batch = compute_pattern_batch(scale=pattern_size, batch_length=number_pattern_images)
 
-for itr, item in enumerate(range(0, N)):
-    print("Processing hologram :", item)
+for itr, item in enumerate(pattern_batch):
+    print("Processing phase mask:", itr)
     print("... ... ...")
 
     holo = Hologram()
     holo.read_image_file_into_array(images_list[0])
 
-    phasemask = RandomPhaseMask()
-    # phasemask.create(1280/4)
-    phasemask.optimize(fraction_set=0.0075)
+    phasemask = FairnessConstraintMask()
+    phasemask.compute(grain, item)
+
     phasemask_filename = os.path.join(target_folder, phasemask_prefix + "{:3d}".format(itr))
     phasemask.write_phase_into_image_file(phasemask_filename, reconstruct_format)
 
@@ -61,14 +66,10 @@ print("Copying final image")
 amplitude_sum.write_array_into_image_file(os.path.join(target_folder, "amplitude_sum"), reconstruct_format)
 
 # red dashes for theoretical and blue squares for experimental
-t = np.arange(1, N+1)
+t = np.arange(1, len(pattern_batch)+1)
 plt.plot(t, speckle_contrast_list/np.max(speckle_contrast_list), 'bs', t, 1.0/np.sqrt(t), 'r--')
 plt.title("Blue: Exp, Red: T")
 
-
-# OLD:
-# sc = speckle_contrast(recon_batch)
-# print("Speckle contrasts for the individual images are: ", sc)
 
 
 #Compute and plot the correlation coefficient matrix
@@ -84,4 +85,3 @@ plt.show()
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-

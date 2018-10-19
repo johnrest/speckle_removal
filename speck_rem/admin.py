@@ -55,3 +55,24 @@ def select_roi(array, wName="Select rectangle"):
     roi = cv2.selectROI(img=image, windowName=wName, fromCenter=False)
     cv2.destroyWindow(wName)
     return roi
+
+
+def compute_pattern_batch(scale=4, batch_length=4*4/2):
+    U, V = np.meshgrid(range(0,scale), range(0,scale))
+    U = U.flatten()
+    V = V.flatten()
+    off_positions = np.stack((U, V))
+    off_positions = np.transpose(off_positions)
+    np.random.shuffle(off_positions)
+    off_positions = np.transpose(off_positions)
+
+    batch = []
+    off_positions_per_image = int(scale*scale/batch_length)          # Number of black pixels on each image
+
+    for sel in (off_positions[:, i:i+off_positions_per_image] for i in range(0, off_positions.shape[1] - off_positions_per_image + 1, off_positions_per_image)):
+        pattern = np.ones((scale, scale))
+        pattern[sel[0,:], sel[1,:]] = 0         # off pixels with FC rule
+        batch.append(pattern)
+
+    return batch
+
