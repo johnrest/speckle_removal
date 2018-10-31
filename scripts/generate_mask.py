@@ -14,8 +14,7 @@ angle_list = [np.pi/4]
 for itr, angle in enumerate(angle_list):
     for jtr, period in enumerate(period_list):
         mask = Mask()
-        # mask.compute_mask(angle, period)
-        mask.compute_fcn_mask(angle, period)
+        mask.compute_mask(angle, period)
         print("Angle (grad): {0}; Period (pix): {1}".format(angle*180/np.pi, period))
         current_image_file = os.path.join(target_folder, mask_image_prefix + "{:03d}".format(itr+jtr))
         print("Writing image to file: ", current_image_file, )

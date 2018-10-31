@@ -34,6 +34,7 @@ def extract_frames_from_video(target_folder, video_filename, image_name_mask):
     video_capture = cv2.VideoCapture(os.path.join(target_folder, video_filename))
     success, image = video_capture.read()
     count = 0
+    first = os.path.join(target_folder, image_name_mask + "_{:03d}".format(count) + ".png")
     while success:
         fname = os.path.join(target_folder, image_name_mask+"_{:03d}".format(count)+".png")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -43,7 +44,7 @@ def extract_frames_from_video(target_folder, video_filename, image_name_mask):
 
     #Hard fix for removing extra frame fron trigger base acquisition.
     #Must delete last image since it repeats the first frame
-    os.remove(fname)
+    os.remove(first)
 
     #TODO: imporve this hard fix
 
