@@ -2,7 +2,7 @@
 
 from speck_rem import *
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_10_31/test_random_patternC"
+target_folder = "C:/Users/itm/Desktop/DH/2018_11_01/test_walsh"
 video_filename = "holo.avi"
 image_filename_mask = "holo_"
 

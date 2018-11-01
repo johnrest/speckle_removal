@@ -34,11 +34,11 @@ def extract_frames_from_video(target_folder, video_filename, image_name_mask):
     video_capture = cv2.VideoCapture(os.path.join(target_folder, video_filename))
     success, image = video_capture.read()
     count = 0
-    first = os.path.join(target_folder, image_name_mask + "_{:03d}".format(count) + ".png")
+    first = os.path.join(target_folder, image_name_mask + "_{:03d}".format(count) + ".tiff")
     while success:
-        fname = os.path.join(target_folder, image_name_mask+"_{:03d}".format(count)+".png")
+        fname = os.path.join(target_folder, image_name_mask+"_{:03d}".format(count)+".tiff")
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        cv2.imwrite(fname, image)  # save frame as PNG file
+        cv2.imwrite(fname, image)  # save frame as TIFF file
         success, image = video_capture.read()
         count += 1
 
@@ -76,4 +76,19 @@ def compute_pattern_batch(scale=4, batch_length=4*4/2):
         batch.append(pattern)
 
     return batch
+
+def crop_image(filename_in, filename_out):
+    """Center crop images to half their size"""
+    image = p_Image.open(filename_in)
+    array = np.array(image)
+
+    h, w = array.shape
+
+    array = array[ int(h/4):int(3*h/4), int(w/4):int(3*w/4) ]
+
+    image = array_to_image(array)
+
+    cv2.imwrite(filename_out, image, [cv2.IMWRITE_PNG_BILEVEL, 1])
+
+
 
