@@ -50,11 +50,14 @@ class Mask(Image):
 
         temp = (u * np.round(np.cos(theta), decimals=2) + v * np.round(np.sin(theta), decimals=2))
 
-        mod = np.random.randint(2,size=(int(1024/grain), int(1024/grain)))
+        window = int(np.ceil(1080/grain))
+
+        mod = np.random.randint(2, size=( window, window))
 
         mod = mod.repeat(grain, axis=0).repeat(grain, axis=1)
 
-        mod = np.pad(mod, ((28, 28), (448,448)), 'constant', constant_values=(0))           # Pad to DMD size
+        mod = mod[0:1080, 0:1080]
+        mod = np.pad(mod, ((0, 0), (420,420)), 'constant', constant_values=(0))           # Pad to DMD size
 
         temp2 = np.sin((2.0 * math.pi / period) * temp - np.pi*mod)
         self.image_array = 1 / 2 + 1 / 2 * np.sign(temp2)

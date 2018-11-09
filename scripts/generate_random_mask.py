@@ -1,10 +1,10 @@
 from speck_rem import *
 from speck_rem.dmd import *
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_10_31/test_random_patternC"
+target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/clover/random_multiple_grain"
 mask_image_prefix = "pattern_"
-number_patterns = 15
-grain = 16
+number_patterns = 20
+grain_list = np.linspace(14, 24, 6, endpoint=True)
 
 # Select period values in pixels
 # period_list = np.linspace(8, 20, num=7, endpoint=True)
@@ -16,7 +16,7 @@ angle = np.pi/4
 
 for itr, item in enumerate(range(number_patterns)):
     mask = Mask()
-    mask.compute_random_mask(angle, period, grain)
+    mask.compute_random_mask(angle, period, int(np.random.choice(grain_list, 1)))
     print("Angle (grad): {0}; Period (pix): {1}".format(angle * 180 / np.pi, period))
     current_image_file = os.path.join(target_folder, mask_image_prefix + "{:03d}".format(itr))
     print("Writing image to file: ", current_image_file, )
