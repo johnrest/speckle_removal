@@ -19,7 +19,7 @@ def speckle_correlation_coefficient(image_batch, roi=True):
             Iq = np.abs(image_q.image_array[int(roi[1]):int(roi[1] + roi[3]), int(roi[0]):int(roi[0] + roi[2])])
             cc_speckle[ii, jj] = np.abs(np.sum((Ip-np.mean(Ip))*(Iq-np.mean(Iq))))\
                                  /np.sqrt(np.sum(np.power(Ip-np.mean(Ip), 2)) * np.sum(np.power(Iq-np.mean(Iq), 2)))
-            print(cc_speckle[ii, jj])
+            # print(cc_speckle[ii, jj])
 
     return cc_speckle
 
