@@ -19,7 +19,7 @@ class Image:
         image_array = p_Image.open(filename)
         self.image_array = np.array(image_array)
 
-        # Padding to produce holograms
+        # Padding to produce squared holograms
         h, w = self.image_array.shape
         self.image_array = np.pad(self.image_array, ((int((w-h)/2), int((w-h)/2)), (0, 0)), 'reflect')
 
@@ -49,7 +49,7 @@ class Image:
 class Hologram(Image):
     """Class to handle holograms"""
 
-    def __init__(self, wavelength=473e-9, sensor_width=6.78e-3, sensor_height=5.43e-3):
+    def __init__(self, wavelength=473e-9, sensor_width=7.07e-3, sensor_height=5.3e-3):
         self.wavelength = wavelength
         self.sensor_width = sensor_width
         self.sensor_height = sensor_height
@@ -81,7 +81,7 @@ class Reconstruction(Image):
 
         if self.spectrum_roi is None:
             # Select area and press enter for continuing
-            self.spectrum_roi = select_roi(spectrum, "Select a ROI to compute the speckle contrast")
+            self.spectrum_roi = select_roi(spectrum, "Select a ROI to filter the Hologram")        #Select a ROI to compute the speckle contrast
 
         r = self.spectrum_roi
         fourier_cropped = fourier[int(r[1]):int(r[1] + r[3]), int(r[0]):int(r[0] + r[2])]
@@ -117,9 +117,7 @@ class Reconstruction(Image):
         H = H*(self.sensor_width/full_width)
         H = np.exp(-1j*math.pi*(1/(self.wavelength*self.distance))*np.power(H,2))
 
-        propagated = (np.fft.ifft2(np.fft.fftshift( self.image_array * H )))
-        return propagated
-
+        self.image_array = (np.fft.ifft2(np.fft.fftshift( self.image_array * H )))
 
 class RandomPhaseMask(Image):
     def __init__(self, image_width=1280, image_height=1280):
@@ -161,8 +159,6 @@ class FairnessConstraintMask(Image):
         modulation_array = np.exp(1j * np.pi * pattern)        #phase
         # modulation_array = np.random.randint(2, size=(scale,scale))                           #amplitude
         self.image_array = modulation_array.repeat(grain, axis=0).repeat(grain, axis=1)
-
-
 
 if __name__ == "__main__":
     main()

@@ -2,7 +2,7 @@
 
 from speck_rem import *
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/three/planar_fixed_freq"
+target_folder = "C:/Users/itm/Desktop/DH/2018_11_19/three/fixed_freq_anular_filter2/"
 video_filename = "holo.avi"
 image_filename_mask = "holo_"
 

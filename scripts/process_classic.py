@@ -2,15 +2,16 @@
 
 from speck_rem import *
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/three/random_multiple_grain"
-holo_name_mask = "holo__0*"
+target_folder = "C:/Users/itm/Desktop/DH/2018_11_22/three/random_different_sized_grain/"
+results_folder = create_folder(target_folder, "comp")
+holo_name_mask = "holo_0*"
 reconstruct_prefix = "rec_"
-focusing_distance = 1.3
-recon_batch = list()
 reconstruct_format = ".tiff"
 
+focusing_distance = 0.85                    # meters
+
 images_list = get_list_images(target_folder, holo_name_mask)
-print(images_list)
+# images_list = images_list[0:2]
 
 for itr, item in enumerate(images_list):
     print("Processing hologram :", item)
@@ -18,25 +19,59 @@ for itr, item in enumerate(images_list):
 
     holo = Hologram()
     holo.read_image_file_into_array(item)
+    if "roi" not in locals():
+        rec = Reconstruction(holo)
+        rec.filter_hologram(holo)
+        roi = rec.spectrum_roi
+    else:
+        rec = Reconstruction(holo, spectrum_roi=roi)
+        rec.filter_hologram(holo)
 
-    if itr == 0:                                #select ROI for first hologram
-        recon = Reconstruction(holo)
-    else:                                       #Use selected ROI for the rest of holograms
-        recon = Reconstruction(holo, spectrum_roi=roi)
+    rec.propagate(focusing_distance)
 
-    recon.filter_hologram(holo)
-    roi = recon.spectrum_roi
-    prop = recon
-    prop.image_array = recon.propagate(focusing_distance)
-    recon_batch.append(prop)
-
-    display_image(abs(prop.image_array), 0.5, "Propagated amplitude")
-
-    current_file = os.path.join(target_folder, reconstruct_prefix + "{:02d}".format(itr))
-    print("Copying to image: " + current_file + reconstruct_format)
-    prop.write_array_into_image_file(current_file, reconstruct_format)
+    current_file = os.path.join(results_folder, reconstruct_prefix + "{:03d}".format(itr))
+    print("Copying image to file: " + current_file + reconstruct_format)
+    print("... ... ...")
+    rec.write_array_into_image_file(current_file, reconstruct_format)
     crop_image(current_file+reconstruct_format, current_file+reconstruct_format)
 
+# List all reconstructed images
+reconstruction_list = get_list_images(results_folder, reconstruct_prefix+"*")
+
+# Compute the speckle correlation coefficient matrix
+# correlation_coefficient_matrix = speckle_correlation_coefficient(reconstruction_list, roi=True)
+# print(correlation_coefficient_matrix)
+
+# Compute speckle contrast
+# average_coeff, standard_dev_coeff = speckle_contrast(reconstruction_list)
+
+# Compute std image
+current_file = os.path.join(results_folder, "average")
+superposition_standard_dev(reconstruction_list, current_file, reconstruct_format)
+
+print("Finished.")
+print("==============================================================================================================")
+
+"""
+print("Copying final image")
+amplitude_sum_file = os.path.join(target_folder, "amplitude_sum")
+amplitude_sum.write_array_into_image_file(amplitude_sum_file, reconstruct_format)
+crop_image(amplitude_sum_file+reconstruct_format,amplitude_sum_file+reconstruct_format)
+
+speckle_contrast_list = speckle_contrast_list/np.max(speckle_contrast_list)
+t = np.arange(1, len(images_list)+1)
+plt.plot(t, speckle_contrast_list/np.max(speckle_contrast_list), 'bs', t, 1.0/np.sqrt(t), 'r--')
+plt.title("Blue: Exp, Red: Theor")
+plt.xlabel('N'), plt.xlabel('A.U.')
+plt.savefig(os.path.join(target_folder, "coeff.png"), bbox_inches="tight")
+
+if itr == 0:
+    amplitude_sum.image_array = np.abs(prop.image_array)
+    roi_speckle = select_roi(np.abs(prop.image_array), "Select ROI to compute speckle contrast")
+else:
+    amplitude_sum.image_array += np.abs(prop.image_array)
+
+speckle_contrast_list.append(speckle_contrast_amp(amplitude_sum.image_array, roi_speckle))
 
 #Compute the sum of amplitudes as final image and compute the speckle contrast
 amplitude_sum = Image()
@@ -88,11 +123,5 @@ np.savez(data_file, cc_speckle, speckle_contrast_list)
 # ax1.grid(True)
 # plt.show()
 
-print("Finished...goodbye")
 
-#OLD: Compute the speckle contrast
-# sc = speckle_contrast(recon_batch)
-# print("Speckle contrast is: ", sc)
-# plt.show()
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+"""
