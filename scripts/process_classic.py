@@ -2,7 +2,7 @@
 
 from speck_rem import *
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_11_22/three/random_different_sized_grain/"
+target_folder = "C:/Users/itm/Desktop/DH/2018_11_22/three/planar_fixed_freq_manual/"
 results_folder = create_folder(target_folder, "comp")
 holo_name_mask = "holo_0*"
 reconstruct_prefix = "rec_"
@@ -19,6 +19,12 @@ for itr, item in enumerate(images_list):
 
     holo = Hologram()
     holo.read_image_file_into_array(item)
+
+    holo_sub = Hologram()
+    holo_sub.read_image_file_into_array(images_list[0])
+
+    holo.image_array = holo.image_array + holo_sub.image_array
+
     if "roi" not in locals():
         rec = Reconstruction(holo)
         rec.filter_hologram(holo)
@@ -46,8 +52,8 @@ reconstruction_list = get_list_images(results_folder, reconstruct_prefix+"*")
 # average_coeff, standard_dev_coeff = speckle_contrast(reconstruction_list)
 
 # Compute std image
-current_file = os.path.join(results_folder, "average")
-superposition_standard_dev(reconstruction_list, current_file, reconstruct_format)
+# current_file = os.path.join(results_folder, "average")
+# superposition_standard_dev(reconstruction_list, current_file, reconstruct_format)
 
 print("Finished.")
 print("==============================================================================================================")

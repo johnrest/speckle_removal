@@ -2,33 +2,127 @@
 from speck_rem import *
 from matplotlib import cm as CM                 #Move to ini file
 
-plt.rcParams.update({'font.size': 14})
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/three"
+target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/three/planar/"
+results_folder = create_folder(target_folder, "comp")
+holo_name_mask = "holo__0*"
 
-data_planar = np.load(os.path.join(target_folder, "planar_data.npz"))
-data_walsh = np.load(os.path.join(target_folder, "walsh_data.npz"))
-data_rand = np.load(os.path.join(target_folder, "random_data.npz"))
+# focusing_distance = 0.85                    # meters
+focusing_distance = 1.5                    # meters
 
-sc_planar = data_planar[data_planar.files[1]]
-sc_walsh = data_walsh[data_walsh.files[1]]
-sc_rand = data_rand[data_rand.files[1]]
+images_list = get_list_images(target_folder, holo_name_mask)
+
+holo_total = np.zeros((1280,1280), dtype=np.float32)
+# holo_total.read_image_file_into_array(images_list[0])
+
+for itr, item in enumerate(images_list):
+    holo = Hologram()
+    holo.read_image_file_into_array(item)
+    holo_total += holo.image_array
+
+holo.image_array = holo_total
+rec = Reconstruction(holo)
+rec.filter_hologram(holo)
+roi = rec.spectrum_roi
+
+rec.propagate(focusing_distance)
 
 
-#Contrast
-t = np.arange(1, len(sc_planar)+1)
-plt.plot(t, 1.0/np.sqrt(t), 'k--')
-plt.plot(t, sc_planar, 'bs')
-plt.plot(t, sc_walsh, 'go')
-plt.plot(t, sc_rand, 'rX')
-plt.xlabel('N')
-plt.xticks(t)
+display_image(holo.image_array, 0.5, "holo")
+display_image(np.abs(rec.image_array), 0.5, "Rec")
 
-plt.legend(('Theoretical', 'Planes', 'Walsh', "Random"),
-           bbox_to_anchor=(1.04, 0.0), loc="lower left", borderaxespad=0)
+cv2.waitKey()
 
-plt.savefig(os.path.join(target_folder, "coeff.png"), bbox_inches="tight")
-plt.show()
+# target_folder = "C:/Users/itm/Desktop/DH/2018_11_22/three/random_different_sized_grain/"
+# results_folder = create_folder(target_folder, "comp")
+# holo_name_mask = "holo_0*"
+#
+# reconstruct_prefix = "rec_"
+
+# reconstruct_format = ".tiff"
+#
+# focusing_distance = 0.7                    # meters
+#
+# # images_list = get_list_images(target_folder, holo_name_mask)
+# holo = Hologram()
+# holo.read_image_file_into_array("C:/Users/itm/Desktop/DH/2018_12_07/test/holo2.tiff")
+#
+# holo2 = Hologram()
+# holo2.read_image_file_into_array("C:/Users/itm/Desktop/DH/2018_12_07/test/holo.tiff")
+#
+# holo.image_array = holo.image_array - holo2.image_array
+# #
+# # ref = Image()
+# # ref.read_image_file_into_array("C:/Users/itm/Desktop/DH/2018_12_07/test/ref.tiff")
+# #
+# # obj = Image()
+# # obj.read_image_file_into_array("C:/Users/itm/Desktop/DH/2018_12_07/test/obj.tiff")
+# #
+# # holo.image_array = holo.image_array - ref.image_array - obj.image_array
+#
+# rec = Reconstruction(holo)
+# rec.filter_hologram(holo)
+# roi = rec.spectrum_roi
+#
+# rec.propagate(focusing_distance)
+#
+# display_image(np.abs(rec.image_array), 0.25, "Rec")
+#
+#
+# #
+# # hologram_filtered-= np.min(hologram_filtered)
+# # print(np.max((hologram_filtered)))
+# # display_image(hologram_filtered, 0.5, "image")
+#
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+# holo = Hologram()
+# holo.read_image_file_into_array(item)
+# if "roi" not in locals():
+#     rec = Reconstruction(holo)
+#     rec.filter_hologram(holo)
+#     roi = rec.spectrum_roi
+# else:
+#     rec = Reconstruction(holo, spectrum_roi=roi)
+#     rec.filter_hologram(holo)
+#
+# rec.propagate(focusing_distance)
+#
+# current_file = os.path.join(results_folder, reconstruct_prefix + "{:03d}".format(itr))
+# print("Copying image to file: " + current_file + reconstruct_format)
+# print("... ... ...")
+# rec.write_array_into_image_file(current_file, reconstruct_format)
+# crop_image(current_file + reconstruct_format, current_file + reconstruct_format)
+
+
+# plt.rcParams.update({'font.size': 14})
+#
+# target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/three"
+#
+# data_planar = np.load(os.path.join(target_folder, "planar_data.npz"))
+# data_walsh = np.load(os.path.join(target_folder, "walsh_data.npz"))
+# data_rand = np.load(os.path.join(target_folder, "random_data.npz"))
+#
+# sc_planar = data_planar[data_planar.files[1]]
+# sc_walsh = data_walsh[data_walsh.files[1]]
+# sc_rand = data_rand[data_rand.files[1]]
+#
+#
+# #Contrast
+# t = np.arange(1, len(sc_planar)+1)
+# plt.plot(t, 1.0/np.sqrt(t), 'k--')
+# plt.plot(t, sc_planar, 'bs')
+# plt.plot(t, sc_walsh, 'go')
+# plt.plot(t, sc_rand, 'rX')
+# plt.xlabel('N')
+# plt.xticks(t)
+#
+# plt.legend(('Theoretical', 'Planes', 'Walsh', "Random"),
+#            bbox_to_anchor=(1.04, 0.0), loc="lower left", borderaxespad=0)
+#
+# plt.savefig(os.path.join(target_folder, "coeff.png"), bbox_inches="tight")
+# plt.show()
 
 
 
