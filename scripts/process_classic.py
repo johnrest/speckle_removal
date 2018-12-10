@@ -1,8 +1,7 @@
 # Full process with the classic/standard methodology for a folder/file
-
 from speck_rem import *
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_11_22/three/planar_fixed_freq_manual/"
+target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/planar_fixed_freq_manual/"
 results_folder = create_folder(target_folder, "comp")
 holo_name_mask = "holo_0*"
 reconstruct_prefix = "rec_"
@@ -11,7 +10,7 @@ reconstruct_format = ".tiff"
 focusing_distance = 0.85                    # meters
 
 images_list = get_list_images(target_folder, holo_name_mask)
-# images_list = images_list[0:2]
+images_list = images_list[0:2]
 
 for itr, item in enumerate(images_list):
     print("Processing hologram :", item)
@@ -20,10 +19,10 @@ for itr, item in enumerate(images_list):
     holo = Hologram()
     holo.read_image_file_into_array(item)
 
-    holo_sub = Hologram()
-    holo_sub.read_image_file_into_array(images_list[0])
-
-    holo.image_array = holo.image_array + holo_sub.image_array
+    # holo_sub = Hologram()
+    # holo_sub.read_image_file_into_array(images_list[0])
+    #
+    # holo.image_array = holo.image_array + holo_sub.image_array
 
     if "roi" not in locals():
         rec = Reconstruction(holo)
@@ -44,16 +43,31 @@ for itr, item in enumerate(images_list):
 # List all reconstructed images
 reconstruction_list = get_list_images(results_folder, reconstruct_prefix+"*")
 
+# Create dictionary to store metrics
+speckle_data = dict()
+
+# Store speckle statistics in a python file
+data_file = os.path.join(results_folder, "data")
+
+# Compute and store speckle metrics
+results = speckle_metrics(reconstruction_list)
+speckle_data.update(zip(("sc_avg", "sc_std", "ssi_avg", "ssi_std", "smpi_avg", "smpi_std"), results))
+
 # Compute the speckle correlation coefficient matrix
-# correlation_coefficient_matrix = speckle_correlation_coefficient(reconstruction_list, roi=True)
-# print(correlation_coefficient_matrix)
+# speckle_data["coefficient_matrix"] = speckle_correlation_coefficient(reconstruction_list, roi=True)
 
-# Compute speckle contrast
-# average_coeff, standard_dev_coeff = speckle_contrast(reconstruction_list)
+# TODO: finish storing of speckle_data
+# TODO: write scripts for plotting
 
-# Compute std image
-# current_file = os.path.join(results_folder, "average")
+# Compute standard deviation image
+# print("Computing the standard deviation image...")
+# current_file = os.path.join(results_folder, "standard_deviation")
 # superposition_standard_dev(reconstruction_list, current_file, reconstruct_format)
+
+# Compute average image
+# print("Computing the average image...")
+# current_file = os.path.join(results_folder, "average")
+# superposition_average(reconstruction_list, current_file, reconstruct_format)
 
 print("Finished.")
 print("==============================================================================================================")

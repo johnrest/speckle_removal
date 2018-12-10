@@ -3,8 +3,8 @@
 from speck_rem import *
 
 
-target_folder = "C:/Users/itm/Desktop/DH/2018_11_09/three/planar_fixed_freq_auto"
-results_folder = "C:/Users/itm/Desktop/DH/2018_11_09/three/planar_fixed_freq_auto/completeG160"
+target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/planar_fixed_freq_manual"
+results_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/planar_fixed_freq_manual"
 holo_name_mask = "holo__0*"
 reconstruct_prefix = "rec_"
 focusing_distance = 1.3

@@ -30,10 +30,16 @@ def speckle_correlation_coefficient(images_list, roi=True):
     return speckle_corr_coeff
 
 
-def speckle_contrast(images_list, roi=None, mode=None):
-    """ Compute the correlation coefficient for a list of reconstructed images,
-        returns a tuple with the coefficient for average and standard deviation
-        modes. Creates an image stack with a ROI selection to avoid memory issues """
+def speckle_metrics(images_list, roi=None, mode=None):
+    """ Compute different metrics for the speckle noise, under two modalities
+        of superposition: average and standart deviation.
+        - Speckle contrast SC
+        - Speckle suppression index SSI
+        - Speckle suppression and mean preservation index   SMPI
+
+        Creates an image stack with a ROI selection to avoid memory issues.
+        :return tuple with speckle coefficients
+        """
 
     first_image = Image()
     first_image.read_image_file_into_array(images_list[0])
@@ -43,9 +49,9 @@ def speckle_contrast(images_list, roi=None, mode=None):
 
     stack = np.empty((roi[3], roi[2], len(images_list)), dtype=float)
 
-    sum_image = np.zeros((roi[3], roi[2]), dtype=float)
-    average_coeff = []
-    standard_dev_coeff = []
+    average_image = np.zeros((roi[3], roi[2]), dtype=float)
+
+    sc_avg, sc_std, ssi_avg, ssi_std, smpi_avg, smpi_std = [], [], [], [], [], []
 
     for itr, item in enumerate(images_list):
         current = Image()
@@ -53,14 +59,25 @@ def speckle_contrast(images_list, roi=None, mode=None):
 
         stack[:, :, itr] = current.image_array[int(roi[1]): int(roi[1] + roi[3]), int(roi[0]): int(roi[0] + roi[2])]
 
-        sum_image += stack[:, :, itr]
+        average_image = np.average(stack, axis=2)
 
         standard_dev_image = np.std(stack, axis=2)
 
-        average_coeff.append(np.std(sum_image/(itr+1))/np.average(sum_image/(itr+1)))
-        standard_dev_coeff.append(np.std(standard_dev_image)/np.average(standard_dev_image))
+        sc_avg.append(np.std(average_image)/np.average(average_image))
+        sc_std.append(np.std(standard_dev_image)/np.average(standard_dev_image))
 
-    return average_coeff, standard_dev_coeff
+        ssi_avg.append((np.std(average_image)/np.average(average_image)) *
+                       (np.average(stack[:, :, 0])/np.std(stack[:, :, 0])))
+        ssi_std.append((np.std(standard_dev_image)/np.average(standard_dev_image)) *
+                       (np.average(stack[:, :, 0])/np.std(stack[:, :, 0])))
+
+        smpi_avg.append((1 + np.abs(np.average(average_image) - np.average(stack[:, :, 0]))) *
+                        (np.std(average_image) / np.std(stack[:, :, 0])))
+
+        smpi_std.append((1 + np.abs(np.average(standard_dev_image) - np.average(stack[:, :, 0]))) *
+                        (np.std(standard_dev_image) / np.std(stack[:, :, 0])))
+
+    return (sc_avg, sc_std, ssi_avg, ssi_std, smpi_avg, smpi_std)
 
 
 def superposition_standard_dev(images_list, filename, format):
@@ -86,8 +103,30 @@ def superposition_standard_dev(images_list, filename, format):
 
 
 
-def superposition_average():
-    pass
+def superposition_average(images_list, filename, format):
+    """
+    Compute the superposition image as the average of the reconstructed images stack
+    :param images_list: List of image file names
+    :param filename: full output file name to store the result
+    :param format: file type for the result
+    :return: No return
+    """
+    first_image = Image()
+    first_image.read_image_file_into_array(images_list[0])
+
+    array = np.empty(first_image.image_array.shape, dtype=float)
+
+    for itr, item in enumerate(images_list):
+        current = Image()
+        current.read_image_file_into_array(item)
+        array += current.image_array
+
+    final_image = Image()
+    final_image.image_array = array/len(images_list)            # compute average
+    final_image.write_array_into_image_file(filename, format)
+
+
+
 
 """
 TODO: delete commented block
