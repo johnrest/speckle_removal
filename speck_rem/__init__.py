@@ -7,6 +7,8 @@ import os, glob
 from PIL import Image as p_Image
 import cv2
 import math
+import pprint
+import pickle
 
 #Inner module imports
 #__all__ = ["holography", "speckle", "admin"]

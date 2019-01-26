@@ -3,13 +3,14 @@ from speck_rem import *
 
 target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/planar_fixed_freq_manual/"
 results_folder = create_folder(target_folder, "comp")
-holo_name_mask = "holo_0*"
+hologram_name_mask = "holo_0*"
 reconstruct_prefix = "rec_"
 reconstruct_format = ".tiff"
+data_filename = "data"
 
 focusing_distance = 0.85                    # meters
 
-images_list = get_list_images(target_folder, holo_name_mask)
+images_list = get_list_images(target_folder, hologram_name_mask)
 images_list = images_list[0:2]
 
 for itr, item in enumerate(images_list):
@@ -46,17 +47,21 @@ reconstruction_list = get_list_images(results_folder, reconstruct_prefix+"*")
 # Create dictionary to store metrics
 speckle_data = dict()
 
-# Store speckle statistics in a python file
-data_file = os.path.join(results_folder, "data")
-
 # Compute and store speckle metrics
+print("Computing the speckle metrics coefficients...")
 results = speckle_metrics(reconstruction_list)
 speckle_data.update(zip(("sc_avg", "sc_std", "ssi_avg", "ssi_std", "smpi_avg", "smpi_std"), results))
 
 # Compute the speckle correlation coefficient matrix
-# speckle_data["coefficient_matrix"] = speckle_correlation_coefficient(reconstruction_list, roi=True)
+print("Computing the correlation matrix...")
+speckle_data["coefficient_matrix"] = speckle_correlation_coefficient(reconstruction_list, roi=True)
 
-# TODO: finish storing of speckle_data
+# Store speckle statistics in a python file
+data_filename = os.path.join(results_folder, data_filename+".pkl")
+output = open(data_filename, "wb")
+pickle.dump(speckle_data, output)
+output.close()
+
 # TODO: write scripts for plotting
 
 # Compute standard deviation image

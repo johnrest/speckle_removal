@@ -19,7 +19,7 @@ pattern_batch = compute_pattern_batch(scale=pattern_size, batch_length=number_pa
 
 for itr, item in enumerate(pattern_batch):
     mask = Mask()
-    mask.compute_fcn_mask(angle, period, item, grain)
+    mask.compute_fairness_constraint_mask(period, angle, item, grain)
     print("Angle (grad): {0}; Period (pix): {1}".format(angle * 180 / np.pi, period))
     current_image_file = os.path.join(target_folder, mask_image_prefix + "{:03d}".format(itr))
     print("Writing image to file: ", current_image_file, )

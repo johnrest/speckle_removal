@@ -2,46 +2,49 @@
 from speck_rem import *
 from matplotlib import cm as CM                 #Move to ini file
 
-# target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/three/planar/"
-target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/planar_fixed_freq_manual/"
-results_folder = create_folder(target_folder, "comp")
-holo_name_mask = "holo_*"
-reconstruct_prefix = "full_recon"
-results_folder = target_folder
-reconstruct_format = ".tiff"
+crop_image("D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/full_recon.tiff", "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/full_recon_out.tiff")
 
 
-focusing_distance = 0.85                    # meters
-# focusing_distance = 1.5                    # meters
-
-images_list = get_list_images(target_folder, holo_name_mask)
-
-holo_total = np.zeros((2048, 2048), dtype=np.float32)
-# holo_total.read_image_file_into_array(images_list[0])
-
-for itr, item in enumerate(images_list):
-    holo = Hologram()
-    holo.read_image_file_into_array(item)
-    holo_total += holo.image_array
-
-holo.image_array = holo_total
-rec = Reconstruction(holo)
-rec.filter_hologram(holo)
-roi = rec.spectrum_roi
-
-rec.propagate(focusing_distance)
-
-
-display_image(holo.image_array, 0.5, "holo")
-display_image(np.abs(rec.image_array), 0.5, "Rec")
-
-current_file = os.path.join(results_folder, reconstruct_prefix)
-print("Copying image to file: " + current_file + reconstruct_format)
-print("... ... ...")
-rec.write_array_into_image_file(current_file, reconstruct_format)
-crop_image(current_file + reconstruct_format, current_file + reconstruct_format)
-
-cv2.waitKey()
+# # target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/three/planar/"
+# target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/planar_fixed_freq_manual/"
+# results_folder = create_folder(target_folder, "comp")
+# holo_name_mask = "holo_*"
+# reconstruct_prefix = "full_recon"
+# results_folder = target_folder
+# reconstruct_format = ".tiff"
+#
+#
+# focusing_distance = 0.85                    # meters
+# # focusing_distance = 1.5                    # meters
+#
+# images_list = get_list_images(target_folder, holo_name_mask)
+#
+# holo_total = np.zeros((2048, 2048), dtype=np.float32)
+# # holo_total.read_image_file_into_array(images_list[0])
+#
+# for itr, item in enumerate(images_list):
+#     holo = Hologram()
+#     holo.read_image_file_into_array(item)
+#     holo_total += holo.image_array
+#
+# holo.image_array = holo_total
+# rec = Reconstruction(holo)
+# rec.filter_hologram(holo)
+# roi = rec.spectrum_roi
+#
+# rec.propagate(focusing_distance)
+#
+#
+# display_image(holo.image_array, 0.5, "holo")
+# display_image(np.abs(rec.image_array), 0.5, "Rec")
+#
+# current_file = os.path.join(results_folder, reconstruct_prefix)
+# print("Copying image to file: " + current_file + reconstruct_format)
+# print("... ... ...")
+# rec.write_array_into_image_file(current_file, reconstruct_format)
+# crop_image(current_file + reconstruct_format, current_file + reconstruct_format)
+#
+# cv2.waitKey()
 
 # target_folder = "C:/Users/itm/Desktop/DH/2018_11_22/three/random_different_sized_grain/"
 # results_folder = create_folder(target_folder, "comp")
