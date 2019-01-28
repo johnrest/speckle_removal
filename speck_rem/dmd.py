@@ -41,7 +41,14 @@ class Mask(Image):
         self.image_array = 1/2 + 1/2 * np.sign(np.sin(phase))
 
     def compute_fairness_constraint_mask(self, period, theta, pattern, grain):
-
+        """
+        Compute a random mask under the fairness constraint sampling with a specified block/grain size
+        :param period: in pixels
+        :param theta: angle in radians
+        :param pattern: numpy array with the sampling under fcn generated from another function
+        :param grain: size of individual elements in pixels
+        :return: None
+        """
         phase = self.plane_phase(period, theta)
 
         large_pattern = pattern.repeat(grain, axis=0).repeat(grain, axis=1)
@@ -52,7 +59,13 @@ class Mask(Image):
         self.image_array = 1 / 2 + 1 / 2 * np.sign(np.sin(phase - large_pattern*np.pi))
 
     def compute_random_mask(self, period, theta, grain):
-
+        """
+        Compute a random mask with a specified block/grain size
+        :param period: in pixels
+        :param theta: angle in radians
+        :param grain: size of individual elements in pixels
+        :return: None
+        """
         phase = self.plane_phase(period, theta)
 
         # WARNING: resizing is done with magic numbers

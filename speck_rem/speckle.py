@@ -2,15 +2,21 @@
 
 from speck_rem import *
 
+
 def speckle_correlation_coefficient(images_list, roi=True):
-    """Compute the speckle correlation coeficient for a list of reconstructed images"""
+    """
+    Compute the speckle correlation coefficient for a list of reconstructed images
+    :param images_list: list of filenames as strings
+    :param roi: flag to indicate if roi needs to be selected. True for roi selection, false for full image
+    :return: numpy 2D array with the coefficients
+    """
     first_image = Image()
     first_image.read_image_file_into_array(images_list[0])
 
-    if roi is True:                                                 # Select ROI to compute correlation in
+    if roi is True:
         roi = select_roi(first_image.image_array, "Select a ROI to compute the speckle correlation")
     else:
-        roi = first_image.image_array.shape                               # Compute correlation over full image
+        roi = first_image.image_array.shape
 
     speckle_corr_coeff = np.empty((len(images_list), len(images_list)), dtype=float)
 
@@ -30,15 +36,15 @@ def speckle_correlation_coefficient(images_list, roi=True):
     return speckle_corr_coeff
 
 
-def speckle_metrics(images_list, roi=None, mode=None):
+def speckle_metrics(images_list, roi=None):
     """ Compute different metrics for the speckle noise, under two modalities
-        of superposition: average and standart deviation.
+        of superposition: average and standard deviation.
         - Speckle contrast SC
         - Speckle suppression index SSI
         - Speckle suppression and mean preservation index   SMPI
-
         Creates an image stack with a ROI selection to avoid memory issues.
-        :return tuple with speckle coefficients
+        :param list with coordinates for roi or empty if roi needs to be selected
+        :return tuple with all speckle coefficients paired up for average and std modes
         """
 
     first_image = Image()
@@ -49,11 +55,10 @@ def speckle_metrics(images_list, roi=None, mode=None):
 
     stack = np.empty((roi[3], roi[2], len(images_list)), dtype=float)
 
-    average_image = np.zeros((roi[3], roi[2]), dtype=float)
-
     sc_avg, sc_std, ssi_avg, ssi_std, smpi_avg, smpi_std = [], [], [], [], [], []
 
     for itr, item in enumerate(images_list):
+
         current = Image()
         current.read_image_file_into_array(item)
 
@@ -77,14 +82,15 @@ def speckle_metrics(images_list, roi=None, mode=None):
         smpi_std.append((1 + np.abs(np.average(standard_dev_image) - np.average(stack[:, :, 0]))) *
                         (np.std(standard_dev_image) / np.std(stack[:, :, 0])))
 
-    return (sc_avg, sc_std, ssi_avg, ssi_std, smpi_avg, smpi_std)
+    return sc_avg, sc_std, ssi_avg, ssi_std, smpi_avg, smpi_std
 
 
 def superposition_standard_dev(images_list, filename, format):
     """
-    Compute the superposition image as the axial standard deviation of the stack pixel by pixel
+    Compute the superposition image as the axial standard deviation of the stack pixel by pixel, write to a file
     :param images_list: list of full filenames
-    :param filename: full filename to write the final image
+    :param filename: full filename to write the final superposed image
+    :return None
     """
     first_image = Image()
     first_image.read_image_file_into_array(images_list[0])
@@ -102,14 +108,13 @@ def superposition_standard_dev(images_list, filename, format):
     final_image.write_array_into_image_file(filename, format)
 
 
-
 def superposition_average(images_list, filename, format):
     """
     Compute the superposition image as the average of the reconstructed images stack
     :param images_list: List of image file names
     :param filename: full output file name to store the result
     :param format: file type for the result
-    :return: No return
+    :return: None
     """
     first_image = Image()
     first_image.read_image_file_into_array(images_list[0])
@@ -124,17 +129,3 @@ def superposition_average(images_list, filename, format):
     final_image = Image()
     final_image.image_array = array/len(images_list)            # compute average
     final_image.write_array_into_image_file(filename, format)
-
-
-
-
-"""
-TODO: delete commented block
-def speckle_contrast_amp(amplitude, roi = []):
-    if not roi:
-        roi = select_roi(amplitude, "Select a ROI to compute the speckle contrast")
-
-    selection = amplitude[int(roi[1]): int(roi[1] + roi[3]), int(roi[0]): int(roi[0] + roi[2])]
-    return np.std(selection)/np.average(selection)
-
-"""

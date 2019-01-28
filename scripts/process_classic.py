@@ -11,27 +11,27 @@ data_filename = "data"
 focusing_distance = 0.85                    # meters
 
 images_list = get_list_images(target_folder, hologram_name_mask)
-images_list = images_list[0:2]
+# images_list = images_list[0:2]
 
 for itr, item in enumerate(images_list):
     print("Processing hologram :", item)
     print("... ... ...")
 
-    holo = Hologram()
-    holo.read_image_file_into_array(item)
+    hologram = Hologram()
+    hologram.read_image_file_into_array(item)
 
     # holo_sub = Hologram()
     # holo_sub.read_image_file_into_array(images_list[0])
     #
-    # holo.image_array = holo.image_array + holo_sub.image_array
+    # hologram.image_array = hologram.image_array + holo_sub.image_array
 
     if "roi" not in locals():
-        rec = Reconstruction(holo)
-        rec.filter_hologram(holo)
+        rec = Reconstruction(hologram)
+        rec.filter_hologram(hologram)
         roi = rec.spectrum_roi
     else:
-        rec = Reconstruction(holo, spectrum_roi=roi)
-        rec.filter_hologram(holo)
+        rec = Reconstruction(hologram, spectrum_roi=roi)
+        rec.filter_hologram(hologram)
 
     rec.propagate(focusing_distance)
 
@@ -56,23 +56,22 @@ speckle_data.update(zip(("sc_avg", "sc_std", "ssi_avg", "ssi_std", "smpi_avg", "
 print("Computing the correlation matrix...")
 speckle_data["coefficient_matrix"] = speckle_correlation_coefficient(reconstruction_list, roi=True)
 
-# Store speckle statistics in a python file
+# Store speckle statistics in a python binary file
 data_filename = os.path.join(results_folder, data_filename+".pkl")
-output = open(data_filename, "wb")
-pickle.dump(speckle_data, output)
-output.close()
+with open(data_filename, "wb") as f:
+    pickle.dump(speckle_data, f)
 
 # TODO: write scripts for plotting
 
 # Compute standard deviation image
-# print("Computing the standard deviation image...")
-# current_file = os.path.join(results_folder, "standard_deviation")
-# superposition_standard_dev(reconstruction_list, current_file, reconstruct_format)
+print("Computing the standard deviation image...")
+current_file = os.path.join(results_folder, "standard_deviation")
+superposition_standard_dev(reconstruction_list, current_file, reconstruct_format)
 
 # Compute average image
-# print("Computing the average image...")
-# current_file = os.path.join(results_folder, "average")
-# superposition_average(reconstruction_list, current_file, reconstruct_format)
+print("Computing the average image...")
+current_file = os.path.join(results_folder, "average")
+superposition_average(reconstruction_list, current_file, reconstruct_format)
 
 print("Finished.")
 print("==============================================================================================================")
