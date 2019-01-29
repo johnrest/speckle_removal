@@ -21,7 +21,7 @@ class Image:
         :return: None
         """
         image_array = p_Image.open(filename)
-        self.image_array = np.array(image_array)
+        self.image_array = np.array(image_array, dtype=np.float32)
 
         # Padding to produce squared images
         h, w = self.image_array.shape

@@ -2,7 +2,27 @@
 from speck_rem import *
 from matplotlib import cm as CM                 #Move to ini file
 
-crop_image("D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/full_recon.tiff", "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/full_recon_out.tiff")
+
+target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/"
+hologram_name_mask = "holo_0*"
+images_list = get_list_images(target_folder, hologram_name_mask)
+
+for itr, item in enumerate(images_list[1:]):
+    print("Processing hologram :", item)
+    print("... ... ...")
+
+    hologram = Hologram()
+    hologram.read_image_file_into_array(item)
+
+    holo_sub = Hologram()
+    holo_sub.read_image_file_into_array(images_list[itr-1])
+
+    hologram.image_array = hologram.image_array - holo_sub.image_array
+    hologram.image_array -= np.min(hologram.image_array)
+
+    current_file = os.path.join(target_folder, "holo_" + "{:03d}".format(itr+20))
+
+    hologram.write_array_into_image_file(current_file, ".tiff")
 
 
 # # target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/three/planar/"
