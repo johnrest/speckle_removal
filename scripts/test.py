@@ -1,29 +1,151 @@
 # Testing script for testing the tests
 from speck_rem import *
-from matplotlib import cm as CM                 #Move to ini file
 
-
+# ======================================================================================================================
+"""Compute the 3D random resampling of the hologram batch"""
 target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/"
 hologram_name_mask = "holo_0*"
+basis_length = 4
+composed_hologram_name_prefix = "holo_"
+file_format = ".tiff"
+
 images_list = get_list_images(target_folder, hologram_name_mask)
 
-for itr, item in enumerate(images_list[1:]):
-    print("Processing hologram :", item)
-    print("... ... ...")
+h1 = Hologram()
+h1.read_image_file_into_array(images_list[0])
 
-    hologram = Hologram()
-    hologram.read_image_file_into_array(item)
+w, h = h1.image_array.shape
 
-    holo_sub = Hologram()
-    holo_sub.read_image_file_into_array(images_list[itr-1])
+ii, jj = np.meshgrid(np.linspace(0, w, w, endpoint=False),
+                   np.linspace(0, h, h, endpoint=False) )
 
-    hologram.image_array = hologram.image_array - holo_sub.image_array
-    hologram.image_array -= np.min(hologram.image_array)
+ii = ii.astype(int)
+jj = jj.astype(int)
 
-    current_file = os.path.join(target_folder, "holo_" + "{:03d}".format(itr+20))
+ii = ii.ravel()
+jj = jj.ravel()
 
-    hologram.write_array_into_image_file(current_file, ".tiff")
 
+for itr, _ in enumerate(range(len(images_list) - basis_length)):
+    sub_images_list = images_list[itr: itr+basis_length]
+
+    resampled_hologram = Hologram()
+    # resampled_hologram.read_image_file_into_array(images_list[0])
+    resampled_hologram.image_array = np.zeros((w,h))
+
+    p = np.random.permutation(len(ii))
+    ps = np.array_split(p, len(sub_images_list))
+
+    for jtr, item in enumerate(sub_images_list):
+        hologram = Hologram()
+        hologram.read_image_file_into_array(item)
+        resampled_hologram.image_array[ii[ps[jtr]], jj[[ps[jtr]]]] = hologram.image_array[ii[ps[jtr]], jj[[ps[jtr]]]]
+
+    current_file = os.path.join(target_folder, composed_hologram_name_prefix + "{:03d}".format(itr+20))
+    resampled_hologram.write_array_into_image_file(current_file, file_format)
+
+
+# display_image(resampled_hologram.image_array)
+#
+# rec = Reconstruction(resampled_hologram)
+# rec.filter_hologram(resampled_hologram)
+#
+# rec.propagate(0.85)
+#
+# display_image(np.abs(rec.image_array), 1, "rec")
+#
+# cv2.waitKey()
+
+
+
+# binary_mask = np.random.randint(2, size=( w, h))
+#
+# h2 = Hologram()
+# h2.read_image_file_into_array(images_list[1])
+#
+# nh = Hologram()
+# # nh.image_array = h1.image_array*binary_mask + h2.image_array*(1-binary_mask)
+#
+#
+# ii, jj = np.meshgrid(np.linspace(0, w, w, endpoint=False),
+#                    np.linspace(0, h, h, endpoint=False) )
+#
+# ii = ii.astype(int)
+# jj = jj.astype(int)
+#
+#
+# ind = np.arange(w*h)
+# np.random.shuffle(ind)
+# ii = ii.ravel()
+# jj = jj.ravel()
+#
+# p = np.random.permutation(len(ii))
+#
+# ii = ii[p]
+# jj = jj[p]
+#
+# # ii = ii.reshape((w,h))
+# # jj = jj.reshape((w,h))
+#
+# h1.image_array[ii[0:2000000], jj[0:2000000]] = 0.0
+#
+# display_image(h1.image_array)
+#
+# #
+# # rec = Reconstruction(nh)
+# # rec.filter_hologram(nh)
+# #
+# # rec.propagate(0.85)
+# #
+# # display_image(binary_mask, 1, "rec")
+#
+#
+
+
+#
+# # ii = ii.reshape((1,9))
+# # jj = ii.reshape((1,9))
+#
+# ii = ii.ravel()
+# jj = jj.ravel()
+#
+#
+#
+# # # print(ii)
+# # np.random.shuffle(ii)
+# # ii = ii.reshape((3,3))
+#
+# array = np.eye(3,3)
+# # print(ii)
+# array[ii,jj] = 0.5
+# print(array)
+
+
+
+# ======================================================================================================================
+"""Compute the difference between two holograms and save to file"""
+
+# target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/"
+# hologram_name_mask = "holo_0*"
+# images_list = get_list_images(target_folder, hologram_name_mask)
+#
+# for itr, item in enumerate(images_list[1:]):
+#     print("Processing hologram :", item)
+#     print("... ... ...")
+#
+#     hologram = Hologram()
+#     hologram.read_image_file_into_array(item)
+#
+#     holo_sub = Hologram()
+#     holo_sub.read_image_file_into_array(images_list[itr-1])
+#
+#     hologram.image_array = hologram.image_array - holo_sub.image_array
+#     hologram.image_array -= np.min(hologram.image_array)
+#
+#     current_file = os.path.join(target_folder, "holo_" + "{:03d}".format(itr+20))
+#
+#     hologram.write_array_into_image_file(current_file, ".tiff")
+# ======================================================================================================================
 
 # # target_folder = "C:/Users/itm/Desktop/DH/2018_11_08/three/planar/"
 # target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/planar_fixed_freq_manual/"

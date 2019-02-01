@@ -9,6 +9,7 @@ import cv2
 import math
 import pprint
 import pickle
+from matplotlib import cm as CM
 
 #Inner module imports
 #__all__ = ["holography", "speckle", "admin"]

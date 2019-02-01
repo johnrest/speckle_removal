@@ -2,6 +2,7 @@
 
 from speck_rem import *
 
+
 target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/comp/"
 data_filename = "data.pkl"
 
@@ -12,14 +13,33 @@ with open(os.path.join(target_folder, data_filename), "rb") as f:
 
 number_images = len(speckle_data["sc_avg"])
 
-#Contrast
+# Speckle contrast
 t = np.arange(1, number_images+1)
 plt.plot(t, 1.0/np.sqrt(t), 'k--')
 plt.plot(t, speckle_data["sc_avg"]/max(speckle_data["sc_avg"]), 'bo')
 plt.plot(t, speckle_data["sc_std"]/max(speckle_data["sc_std"]), 'r*')
+plt.savefig(os.path.join(target_folder, "coeff.png"), bbox_inches="tight")
+
+
+# Correlation coefficient matrix
+cc_speckle= speckle_data["coefficient_matrix"]
+
+mask =  1-np.tri(cc_speckle.shape[0], k=0)
+cc_speckle = np.ma.array(cc_speckle, mask=mask) # mask out the lower triangle
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
+cmap = CM.get_cmap('viridis', 256) # jet doesn't have white color
+cmap.set_bad('w') # default value is 'k'
+ax1.imshow(cc_speckle, interpolation="nearest", cmap=cmap, vmin=0.0, vmax=1.0)
+# ax1.grid(True)
+plt.xticks(range(0,cc_speckle.shape[0], 1))
+plt.yticks(range(0,cc_speckle.shape[0], 1))
+plt.savefig(os.path.join(target_folder, "corr.png"), bbox_inches="tight")
+
+
+
+
 plt.show()
-
-
 
 # data_planar = np.load(os.path.join(target_folder, "planar_data.npz"))
 # data_walsh = np.load(os.path.join(target_folder, "walsh_data.npz"))
