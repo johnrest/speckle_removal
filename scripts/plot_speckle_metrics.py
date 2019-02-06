@@ -2,8 +2,7 @@
 
 from speck_rem import *
 
-
-target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/comp/"
+target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/Basis4_Grain256/"
 data_filename = "data.pkl"
 
 plt.rcParams.update({'font.size': 14})

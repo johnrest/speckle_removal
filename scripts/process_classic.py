@@ -2,8 +2,8 @@
 from speck_rem import *
 
 target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/"
-results_folder = create_folder(target_folder, "comp")
-hologram_name_mask = "holo_*"
+results_folder = create_folder(target_folder, "Basis4_Grain256")
+hologram_name_mask = "composed_holo_*"
 reconstruct_prefix = "rec_"
 reconstruct_format = ".tiff"
 data_filename = "data"

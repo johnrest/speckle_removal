@@ -2,7 +2,81 @@
 from speck_rem import *
 
 # ======================================================================================================================
-"""Compute the 3D random resampling of the hologram batch"""
+
+def test_random_pattern(scale, number_patterns):
+    w = scale
+    h = scale
+
+    ii, jj = np.meshgrid(np.linspace(0, w, w, endpoint=False),
+                         np.linspace(0, h, h, endpoint=False))
+
+    ii = ii.astype(int)
+    jj = jj.astype(int)
+
+    ii = ii.ravel()
+    jj = jj.ravel()
+
+    p = np.random.permutation(len(ii))
+    ps = np.array_split(p, number_patterns)
+
+    batch = []
+    for itr, item in enumerate(range(number_patterns)):
+        pattern = np.zeros((scale, scale))
+        pattern[ii[ps[itr]], jj[[ps[itr]]]] = 1.0
+        batch.append(pattern)
+
+    return batch
+
+
+### Compute a 3D composed hologram from the batch, with varying grain size
+target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/"
+hologram_name_mask = "holo_0*"
+basis_length = 4
+composed_hologram_name_prefix = "composed_holo_"
+file_format = ".tiff"
+
+images_list = get_list_images(target_folder, hologram_name_mask)
+
+grain = 256
+pattern_size = int(2048/grain)
+number_pattern_images = basis_length
+
+for itr, _ in enumerate(range(20)):
+
+    # pattern_batch = compute_pattern_batch(scale=pattern_size, batch_length=number_pattern_images)
+    pattern_batch = test_random_pattern(pattern_size, number_pattern_images)
+
+    composed = Hologram()
+    composed.image_array = np.zeros((2048, 2048), dtype=np.float32)
+
+    for jtr, pattern in enumerate(pattern_batch):
+        binary_mask = pattern.repeat(grain, axis=0).repeat(grain, axis=1)
+
+        hologram = Hologram()
+        hologram.read_image_file_into_array(images_list[ np.random.randint(basis_length)])
+        composed.image_array = composed.image_array + hologram.image_array*binary_mask
+        # display_image(composed.image_array, 0.4, "Partial")
+        # cv2.waitKey(0)
+
+    current_file = os.path.join(target_folder, composed_hologram_name_prefix + "{:03d}".format(itr))
+    print('Creating...', current_file)
+    composed.write_array_into_image_file(current_file, file_format)
+
+# display_image(composed.image_array)
+
+# rec = Reconstruction(composed)
+# rec.filter_hologram(composed)
+#
+# rec.propagate(0.85)
+#
+# display_image(np.abs(rec.image_array), 0.5, "rec")
+#
+# cv2.waitKey()
+print("Done...")
+
+# ======================================================================================================================
+"""
+### Compute the 3D random resampling of the hologram batch
 target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/"
 hologram_name_mask = "holo_0*"
 basis_length = 4
@@ -43,7 +117,8 @@ for itr, _ in enumerate(range(len(images_list) - basis_length)):
 
     current_file = os.path.join(target_folder, composed_hologram_name_prefix + "{:03d}".format(itr+20))
     resampled_hologram.write_array_into_image_file(current_file, file_format)
-
+"""
+# ======================================================================================================================
 
 # display_image(resampled_hologram.image_array)
 #
