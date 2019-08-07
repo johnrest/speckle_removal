@@ -204,6 +204,5 @@ class FairnessConstraintMask(Image):
         # modulation_array = np.random.randint(2, size=(scale,scale))                           #amplitude
         self.image_array = modulation_array.repeat(grain, axis=0).repeat(grain, axis=1)
 
-
 if __name__ == "__main__":
     main()

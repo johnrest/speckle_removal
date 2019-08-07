@@ -64,9 +64,11 @@ def speckle_metrics(images_list, roi=None):
 
         stack[:, :, itr] = current.image_array[int(roi[1]): int(roi[1] + roi[3]), int(roi[0]): int(roi[0] + roi[2])]
 
-        average_image = np.average(stack, axis=2)
+        average_image = np.average(stack[:, :, 0:(itr+1)], axis=2)
 
-        standard_dev_image = np.std(stack, axis=2)
+        standard_dev_image = np.std(stack[:, :, 0:(itr+1)], axis=2)
+
+        print(np.shape(stack[:, :, 0:(itr+1)]))
 
         sc_avg.append(np.std(average_image)/np.average(average_image))
         sc_std.append(np.std(standard_dev_image)/np.average(standard_dev_image))
@@ -81,6 +83,8 @@ def speckle_metrics(images_list, roi=None):
 
         smpi_std.append((1 + np.abs(np.average(standard_dev_image) - np.average(stack[:, :, 0]))) *
                         (np.std(standard_dev_image) / np.std(stack[:, :, 0])))
+
+        # harmonic_average = (itr + 1)/np.sum(1/stack)
 
     return sc_avg, sc_std, ssi_avg, ssi_std, smpi_avg, smpi_std
 
@@ -119,7 +123,7 @@ def superposition_average(images_list, filename, format):
     first_image = Image()
     first_image.read_image_file_into_array(images_list[0])
 
-    array = np.empty(first_image.image_array.shape, dtype=float)
+    array = np.ones(first_image.image_array.shape, dtype=float)
 
     for itr, item in enumerate(images_list):
         current = Image()

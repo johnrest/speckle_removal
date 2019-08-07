@@ -2,7 +2,7 @@
 
 from speck_rem import *
 
-target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/Basis4_Grain256/"
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/composed_G256\rec/"
 data_filename = "data.pkl"
 
 plt.rcParams.update({'font.size': 14})
@@ -23,19 +23,17 @@ plt.savefig(os.path.join(target_folder, "coeff.png"), bbox_inches="tight")
 # Correlation coefficient matrix
 cc_speckle= speckle_data["coefficient_matrix"]
 
-mask =  1-np.tri(cc_speckle.shape[0], k=0)
+mask = 1-np.tri(cc_speckle.shape[0], k=0)
 cc_speckle = np.ma.array(cc_speckle, mask=mask) # mask out the lower triangle
 fig = plt.figure()
 ax1 = fig.add_subplot(111)
-cmap = CM.get_cmap('viridis', 256) # jet doesn't have white color
+cmap = CM.get_cmap('viridis', 256)                                  # jet doesn't have white color
 cmap.set_bad('w') # default value is 'k'
 ax1.imshow(cc_speckle, interpolation="nearest", cmap=cmap, vmin=0.0, vmax=1.0)
 # ax1.grid(True)
-plt.xticks(range(0,cc_speckle.shape[0], 1))
-plt.yticks(range(0,cc_speckle.shape[0], 1))
+plt.xticks(range(0, cc_speckle.shape[0], 1))
+plt.yticks(range(0, cc_speckle.shape[0], 1))
 plt.savefig(os.path.join(target_folder, "corr.png"), bbox_inches="tight")
-
-
 
 
 plt.show()
