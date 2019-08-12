@@ -1,67 +1,181 @@
 # Testing script for testing the tests
 from speck_rem import *
+from speck_rem.holography import Image
 
-# ======================================================================================================================
+# # ======================================================================================================================
 
-def test_random_pattern(scale, number_patterns):
-    w = scale
-    h = scale
-
-    ii, jj = np.meshgrid(np.linspace(0, w, w, endpoint=False),
-                         np.linspace(0, h, h, endpoint=False))
-
-    ii = ii.astype(int)
-    jj = jj.astype(int)
-
-    ii = ii.ravel()
-    jj = jj.ravel()
-
-    p = np.random.permutation(len(ii))
-    ps = np.array_split(p, number_patterns)
-
-    batch = []
-    for itr, item in enumerate(range(number_patterns)):
-        pattern = np.zeros((scale, scale))
-        pattern[ii[ps[itr]], jj[[ps[itr]]]] = 1.0
-        batch.append(pattern)
-
-    return batch
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_G256\rec\temp/"
+file_mask = "rec_*"
 
 
-### Compute a 3D composed hologram from the batch, with varying grain size
-target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/"
-hologram_name_mask = "holo_0*"
-basis_length = 4
-composed_hologram_name_prefix = "composed_holo_"
-file_format = ".tiff"
+images_list = get_list_images(target_folder, file_mask)
 
-images_list = get_list_images(target_folder, hologram_name_mask)
+image_profile([images_list[0]])
 
-grain = 256
-pattern_size = int(2048/grain)
-number_pattern_images = basis_length
+# print(*images_list, sep="\n")
 
-for itr, _ in enumerate(range(20)):
 
-    # pattern_batch = compute_pattern_batch(scale=pattern_size, batch_length=number_pattern_images)
-    pattern_batch = test_random_pattern(pattern_size, number_pattern_images)
 
-    composed = Hologram()
-    composed.image_array = np.zeros((2048, 2048), dtype=np.float32)
+# # ======================================================================================================================
+# from sklearn.decomposition import PCA
+# from sklearn.preprocessing import StandardScaler
+#
+#
+# def doPCA(data, components=1):
+#     pca = PCA(components)
+#     pca.fit(data)
+#     components = pca.transform(data)
+#     approximation = pca.inverse_transform(components)
+#     return approximation
+#
+# # PCA analysis of reconstructed images
+# target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_G256\rec\temp/"
+# file_mask = "rec_*"
+#
+# images_list = get_list_images(target_folder, file_mask)
+# print(*images_list, sep="\n")
+#
+# # Evaluate only once to crop images by a centered half
+# # for itr, item in enumerate(images_list):
+# #     crop_image(item, item)
+#
+# w, h = 512, 512
+#
+# data = np.zeros((w*h, len(images_list)))
+#
+# for itr, item in enumerate(images_list):
+#
+#     img = Image()
+#     img.read_image_file_into_array(item)
+#     data[:, itr] = img.image_array.reshape(-1)
+#
+# # scaler = StandardScaler()
+#
+# # Fit on training set only.
+# # data = scaler.fit_transform(data)
+#
+# pca = PCA()
+#
+# pca_data = pca.fit_transform(data)
+#
+# print("Number of components:", pca.n_components_)
+#
+# # approximation = pca.inverse_transform(pca_data)
+# #
+# # average = Image()
+# # average.image_array = np.zeros((512,512))
+# #
+# # for itr in range(len(images_list)):
+# #
+# #     ind = Image()
+# #     ind.image_array = approximation[:, itr].reshape(512, 512)
+# #     current_file = os.path.join(target_folder, "ind_" + "{:03d}".format(itr))
+# #     ind.write_array_into_image_file(current_file, ".tiff")
+# #     average.image_array += ind.image_array
+# #
+# #
+# # current_file = os.path.join(target_folder, "avg_")
+# # average.image_array /= len(images_list)
+# # average.write_array_into_image_file(current_file, ".tiff")
+#
+#
+# # plt.figure(figsize=(8,4))
+# # Original Image
+# # plt.subplot(1, 2, 1)
+# # plt.imshow(data[:,1].reshape(512,512),
+# #               cmap = plt.cm.gray, interpolation='nearest',
+# #               clim=(-1, 1));
+# # plt.xlabel('784 components', fontsize = 14)
+# # plt.title('Original Image', fontsize = 20)
+#
+# # 154 principal components
+# # plt.subplot(1, 2, 2)
+# # plt.imshow(approximation[:,1].reshape(512, 512),
+# #               cmap = plt.cm.gray, interpolation='nearest',
+# #               clim=(-1, 1));
+# # plt.xlabel('154 components', fontsize = 14)
+# # plt.title('100% of Explained Variance', fontsize = 20)
+#
+# #Plot the cumulative variance
+# tot = sum(pca.explained_variance_)
+# var_exp = [(i/tot)*100 for i in sorted(pca.explained_variance_, reverse=True)]
+# cum_var_exp = np.cumsum(var_exp)
+#
+# plt.figure(figsize=(10, 5))
+# plt.step(range(1, pca.n_components_+1), cum_var_exp, where='mid',label='cumulative explained variance')
+# plt.title('Cumulative Explained Variance as a Function of the Number of Components')
+# plt.ylabel('Cumulative Explained variance')
+# plt.xlabel('Principal components')
+#
+# # display_image(data[:,0].reshape(512,512), 0.5, "image")
+# # display_image(approximation[:,0].reshape(512,512), 0.5, "approx")
+#
+# # cv2.waitKey(0)
+# # cv2.destroyAllWindows()
+#
+# plt.show()
 
-    for jtr, pattern in enumerate(pattern_batch):
-        binary_mask = pattern.repeat(grain, axis=0).repeat(grain, axis=1)
-
-        hologram = Hologram()
-        hologram.read_image_file_into_array(images_list[ np.random.randint(basis_length)])
-        composed.image_array = composed.image_array + hologram.image_array*binary_mask
-        # display_image(composed.image_array, 0.4, "Partial")
-        # cv2.waitKey(0)
-
-    current_file = os.path.join(target_folder, composed_hologram_name_prefix + "{:03d}".format(itr))
-    print('Creating...', current_file)
-    composed.write_array_into_image_file(current_file, file_format)
-
+# # ======================================================================================================================
+#
+# def test_random_pattern(scale, number_patterns):
+#     w = scale
+#     h = scale
+#
+#     ii, jj = np.meshgrid(np.linspace(0, w, w, endpoint=False),
+#                          np.linspace(0, h, h, endpoint=False))
+#
+#     ii = ii.astype(int)
+#     jj = jj.astype(int)
+#
+#     ii = ii.ravel()
+#     jj = jj.ravel()
+#
+#     p = np.random.permutation(len(ii))
+#     ps = np.array_split(p, number_patterns)
+#
+#     batch = []
+#     for itr, item in enumerate(range(number_patterns)):
+#         pattern = np.zeros((scale, scale))
+#         pattern[ii[ps[itr]], jj[[ps[itr]]]] = 1.0
+#         batch.append(pattern)
+#
+#     return batch
+#
+#
+# ### Compute a 3D composed hologram from the batch, with varying grain size
+# target_folder = "D:/Research/SpeckleRemoval/Data/2018_11_22/three/random_different_sized_grain/"
+# hologram_name_mask = "holo_0*"
+# basis_length = 4
+# composed_hologram_name_prefix = "composed_holo_"
+# file_format = ".tiff"
+#
+# images_list = get_list_images(target_folder, hologram_name_mask)
+#
+# grain = 256
+# pattern_size = int(2048/grain)
+# number_pattern_images = basis_length
+#
+# for itr, _ in enumerate(range(20)):
+#
+#     # pattern_batch = compute_pattern_batch(scale=pattern_size, batch_length=number_pattern_images)
+#     pattern_batch = test_random_pattern(pattern_size, number_pattern_images)
+#
+#     composed = Hologram()
+#     composed.image_array = np.zeros((2048, 2048), dtype=np.float32)
+#
+#     for jtr, pattern in enumerate(pattern_batch):
+#         binary_mask = pattern.repeat(grain, axis=0).repeat(grain, axis=1)
+#
+#         hologram = Hologram()
+#         hologram.read_image_file_into_array(images_list[ np.random.randint(basis_length)])
+#         composed.image_array = composed.image_array + hologram.image_array*binary_mask
+#         # display_image(composed.image_array, 0.4, "Partial")
+#         # cv2.waitKey(0)
+#
+#     current_file = os.path.join(target_folder, composed_hologram_name_prefix + "{:03d}".format(itr))
+#     print('Creating...', current_file)
+#     composed.write_array_into_image_file(current_file, file_format)
+#
 # display_image(composed.image_array)
 
 # rec = Reconstruction(composed)
@@ -72,7 +186,7 @@ for itr, _ in enumerate(range(20)):
 # display_image(np.abs(rec.image_array), 0.5, "rec")
 #
 # cv2.waitKey()
-print("Done...")
+# print("Done...")
 
 # ======================================================================================================================
 """

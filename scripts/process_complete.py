@@ -20,7 +20,6 @@ number_pattern_images = (pattern_size*pattern_size)/4
 
 images_list = get_list_images(target_folder, holo_name_mask)
 
-
 for itr, file in enumerate(images_list):
     print("Processing hologram :", file)
     print("... ... ...")
@@ -28,16 +27,16 @@ for itr, file in enumerate(images_list):
     #Compute FCN sampled masks
     pattern_batch = compute_pattern_batch(scale=pattern_size, batch_length=number_pattern_images)
 
-    # holo = Hologram()
-    # holo.read_image_file_into_array(images_list[itr])
-    #
-    # if itr == 0:
-    #     recon = Reconstruction(holo)
-    # else:
-    #     recon = Reconstruction(holo, spectrum_roi=selected_roi)
-    #
-    # individual_recon = Image()
-    # individual_recon.image_array = np.zeros(holo.image_array.shape)
+    holo = Hologram()
+    holo.read_image_file_into_array(images_list[itr])
+
+    if itr == 0:
+        recon = Reconstruction(holo)
+    else:
+        recon = Reconstruction(holo, spectrum_roi=selected_roi)
+
+    individual_recon = Image()
+    individual_recon.image_array = np.zeros(holo.image_array.shape)
 
     for jtr, pattern in enumerate(pattern_batch):
         print("Processing phase mask:", jtr)

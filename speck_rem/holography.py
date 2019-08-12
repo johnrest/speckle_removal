@@ -3,7 +3,7 @@
 
 # import speck_rem
 from speck_rem import *
-from speck_rem.admin import *
+# from speck_rem.admin import *
 
 def main():
     pass

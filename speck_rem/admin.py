@@ -1,7 +1,7 @@
 # File for general purposes, i.e. tools needed throught the module
 
 from speck_rem import *
-
+# from .holography import Image
 
 def get_list_images(directory, mask):
     """
@@ -140,4 +140,101 @@ def create_folder(parent_folder, name):
     new_folder = os.path.join(parent_folder, name)
     os.makedirs(new_folder, exist_ok=True)
     return new_folder
+
+
+def image_profile(files, pts):
+    """
+    Select a profile from a gray scale image, based on two clicks
+    :param files: List of string with full file names
+    :param pts: Numpy Array containing the points
+    :return: profile_data, numpy array with data in columns
+    """
+
+    # Check two points are available
+    assert pts.shape[0] == 2, "Points are not correct"
+    assert pts.shape[0] >= 2, "Points are not correct"
+
+    if pts.shape[1] > 2:
+        pts = pts[:, 0:2]           # Discard unnecessary points
+
+    # Use the clicked points to select lines for all files and store
+    # inside a numpy array as column vectors
+
+    data = []
+    for itr, file in enumerate(files):
+        img = Image()
+        img.read_image_file_into_array(file)
+        print("Processing image:", itr)
+
+        data.append(bresenham_march(img.image_array, pts[:, 0], pts[:, 1]))
+
+    data = np.array(data)
+
+    return data
+
+
+def bresenham_march(img, p1, p2):
+    """
+    Shameless copy from https://stackoverflow.com/questions/32328179/opencv-3-0-python-lineiterator
+    :param img: Image array
+    :param p1: First point
+    :param p2: Second point
+    :return: ret: list containing the pixel data
+    """
+    x1 = p1[1]
+    y1 = p1[0]
+    x2 = p2[1]
+    y2 = p2[0]
+
+    print("P1", p1)
+    print("P2", p2)
+
+    # tests if any coordinate is outside the image
+    if (
+            x1 >= img.shape[0]
+            or x2 >= img.shape[0]
+            or y1 >= img.shape[1]
+            or y2 >= img.shape[1]
+    ):  # tests if line is in image, necessary because some part of the line must be inside,
+        # it respects the case that the two points are outside
+        if not cv2.clipLine((0, 0, *img.shape), p1, p2):
+            print("not in region")
+            return
+
+    steep = math.fabs(y2 - y1) > math.fabs(x2 - x1)
+    if steep:
+        x1, y1 = y1, x1
+        x2, y2 = y2, x2
+
+    # takes left to right
+    also_steep = x1 > x2
+    if also_steep:
+        x1, x2 = x2, x1
+        y1, y2 = y2, y1
+
+    dx = x2 - x1
+    dy = math.fabs(y2 - y1)
+    error = 0.0
+    delta_error = 0.0
+    # Default if dx is zero
+    if dx != 0:
+        delta_error = math.fabs(dy / dx)
+
+    y_step = 1 if y1 < y2 else -1
+
+    y = y1
+    ret = []
+    for x in range(x1, x2):
+        p = (y, x) if steep else (x, y)
+        if p[0] < img.shape[0] and p[1] < img.shape[1]:
+            # ret.append((p, img[p]))
+            ret.append(img[p])              # John: only store the gray values
+        error += delta_error
+        if error >= 0.5:
+            y += y_step
+            error -= 1
+    if also_steep:  # because we took the left to right instead
+        ret.reverse()
+    return ret
+
 
