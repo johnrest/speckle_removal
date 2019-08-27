@@ -1,17 +1,39 @@
 # Full process with the classic/standard methodology for a folder/file
 from speck_rem import *
 
-target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/temp/"
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/temp_08_21/"
 results_folder = create_folder(target_folder, "rec2")
 hologram_name_mask = "comp_holo_*"
 reconstruct_prefix = "rec_"
 reconstruct_format = ".tiff"
 data_filename = "data"
+roi_mode = "save"                       #load or save
 
 focusing_distance = 0.85                    # meters
 
 images_list = get_list_images(target_folder, hologram_name_mask)
 
+# rec = Reconstruction(hologram)
+# rec.image_array = hologram.image_array
+# rec.propagate(focusing_distance)
+# roi = select_roi(np.sqrt(np.abs(rec.image_array)), "Select ROI")
+# # rec.image_array = abs(rec.image_array)
+# print("ROI: ", roi)
+#
+# print(rec.image_array.shape)
+# rec.image_array = crop_array_with_roi(rec.image_array, roi)
+#
+# display_image(abs(rec.image_array), 1, "Cropped reconstruction")
+#
+# current_file = os.path.join(results_folder, "roi01")
+# save_roi(roi, current_file)
+#
+# cv2.waitKey(0)
+
+
+if roi_mode == "load":
+    current_file = os.path.join(results_folder, "roi01")
+    roi = load_roi(current_file)
 
 for itr, item in enumerate(images_list):
     print("Processing hologram :", item)
@@ -20,27 +42,30 @@ for itr, item in enumerate(images_list):
     hologram = Hologram()
     hologram.read_image_file_into_array(item)
 
-    # holo_sub = Hologram()
-    # holo_sub.read_image_file_into_array(images_list[itr-1])
-    #
-    # hologram.image_array = hologram.image_array - holo_sub.image_array
-    # hologram.image_array -= np.min(hologram.image_array)
-
-    if "roi" not in locals():
+    if itr == 0 and roi_mode == "save":
         rec = Reconstruction(hologram)
-        rec.filter_hologram(hologram)
-        roi = rec.spectrum_roi
+        rec.image_array = hologram.image_array
+        rec.propagate(focusing_distance)
+        roi = select_roi(np.sqrt(np.abs(rec.image_array)), "Select ROI")
+        current_file = os.path.join(results_folder, "roi01")
+        save_roi(roi, current_file)
+        # rec.filter_hologram(hologram)
+        # roi = rec.spectrum_roi
     else:
-        rec = Reconstruction(hologram, spectrum_roi=roi)
-        rec.filter_hologram(hologram)
+        rec = Reconstruction(hologram)
+        rec.image_array = hologram.image_array
+        rec.propagate(focusing_distance)
+        # rec.filter_hologram(hologram)
 
-    rec.propagate(focusing_distance)
+    # rec.propagate(focusing_distance)
+    rec.image_array = crop_array_with_roi(rec.image_array, roi)
 
     current_file = os.path.join(results_folder, reconstruct_prefix + "{:03d}".format(itr))
     print("Copying image to file: " + current_file + reconstruct_format)
     print("... ... ...")
     rec.write_array_into_image_file(current_file, reconstruct_format)
-    crop_image(current_file+reconstruct_format, current_file+reconstruct_format)
+    # crop_image(current_file+reconstruct_format, current_file+reconstruct_format)
+
 
 # List all reconstructed images
 reconstruction_list = get_list_images(results_folder, reconstruct_prefix+"*")
@@ -50,12 +75,21 @@ speckle_data = dict()
 
 # Compute and store speckle metrics
 print("Computing the speckle metrics coefficients...")
-results = speckle_metrics(reconstruction_list)
+
+if roi_mode == "save":
+    roi = select_roi(np.abs(rec.image_array), "Select ROI")
+    current_file = os.path.join(results_folder, "roi02")
+    save_roi(roi, current_file)
+elif roi_mode == "load":
+    current_file = os.path.join(results_folder, "roi02")
+    roi = load_roi(current_file)
+
+results = speckle_metrics(reconstruction_list, roi)
 speckle_data.update(zip(("sc_avg", "sc_std", "ssi_avg", "ssi_std", "smpi_avg", "smpi_std"), results))
 
 # Compute the speckle correlation coefficient matrix
 print("Computing the correlation matrix...")
-speckle_data["coefficient_matrix"] = speckle_correlation_coefficient(reconstruction_list, roi=True)
+speckle_data["coefficient_matrix"] = speckle_correlation_coefficient(reconstruction_list, roi=False)
 
 # Store speckle statistics in a python binary file
 data_filename = os.path.join(results_folder, data_filename+".pkl")

@@ -13,9 +13,9 @@ from matplotlib import cm as CM
 
 #Inner module imports
 #__all__ = ["holography", "speckle", "admin"]
-from speck_rem.holography import *
-from speck_rem.speckle import *
-from speck_rem.admin import *
-from speck_rem.dmd import *
+from admin import *
+from holography import *
+from speckle import *
+from dmd import *
 
 

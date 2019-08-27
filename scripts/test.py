@@ -4,99 +4,100 @@ from speck_rem.holography import Image
 
 # # ======================================================================================================================
 
-target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_G256\rec\temp/"
-file_mask = "rec_*"
-
-
-images_list = get_list_images(target_folder, file_mask)
-
-image_profile([images_list[0]])
+# target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_G256\rec\temp/"
+# file_mask = "rec_*"
+#
+#
+# images_list = get_list_images(target_folder, file_mask)
+#
+# image_profile([images_list[0]])
 
 # print(*images_list, sep="\n")
 
 
 
 # # ======================================================================================================================
-# from sklearn.decomposition import PCA
-# from sklearn.preprocessing import StandardScaler
-#
-#
-# def doPCA(data, components=1):
-#     pca = PCA(components)
-#     pca.fit(data)
-#     components = pca.transform(data)
-#     approximation = pca.inverse_transform(components)
-#     return approximation
-#
-# # PCA analysis of reconstructed images
-# target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_G256\rec\temp/"
-# file_mask = "rec_*"
-#
-# images_list = get_list_images(target_folder, file_mask)
-# print(*images_list, sep="\n")
-#
-# # Evaluate only once to crop images by a centered half
-# # for itr, item in enumerate(images_list):
-# #     crop_image(item, item)
-#
-# w, h = 512, 512
-#
-# data = np.zeros((w*h, len(images_list)))
-#
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+
+def doPCA(data, components=1):
+    pca = PCA(components)
+    pca.fit(data)
+    components = pca.transform(data)
+    approximation = pca.inverse_transform(components)
+    return approximation
+
+# PCA analysis of reconstructed images
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\temp_08_21/"
+file_mask = "comp_holo_*"
+
+images_list = get_list_images(target_folder, file_mask)
+images_list = images_list[0:4]
+print(*images_list, sep="\n")
+
+# Evaluate only once to crop images by a centered half
 # for itr, item in enumerate(images_list):
-#
-#     img = Image()
-#     img.read_image_file_into_array(item)
-#     data[:, itr] = img.image_array.reshape(-1)
-#
-# # scaler = StandardScaler()
-#
-# # Fit on training set only.
-# # data = scaler.fit_transform(data)
-#
-# pca = PCA()
-#
-# pca_data = pca.fit_transform(data)
-#
-# print("Number of components:", pca.n_components_)
-#
-# # approximation = pca.inverse_transform(pca_data)
-# #
-# # average = Image()
-# # average.image_array = np.zeros((512,512))
-# #
-# # for itr in range(len(images_list)):
-# #
-# #     ind = Image()
-# #     ind.image_array = approximation[:, itr].reshape(512, 512)
-# #     current_file = os.path.join(target_folder, "ind_" + "{:03d}".format(itr))
-# #     ind.write_array_into_image_file(current_file, ".tiff")
-# #     average.image_array += ind.image_array
-# #
-# #
-# # current_file = os.path.join(target_folder, "avg_")
-# # average.image_array /= len(images_list)
-# # average.write_array_into_image_file(current_file, ".tiff")
-#
-#
-# # plt.figure(figsize=(8,4))
-# # Original Image
-# # plt.subplot(1, 2, 1)
-# # plt.imshow(data[:,1].reshape(512,512),
-# #               cmap = plt.cm.gray, interpolation='nearest',
-# #               clim=(-1, 1));
-# # plt.xlabel('784 components', fontsize = 14)
-# # plt.title('Original Image', fontsize = 20)
-#
-# # 154 principal components
-# # plt.subplot(1, 2, 2)
-# # plt.imshow(approximation[:,1].reshape(512, 512),
-# #               cmap = plt.cm.gray, interpolation='nearest',
-# #               clim=(-1, 1));
-# # plt.xlabel('154 components', fontsize = 14)
-# # plt.title('100% of Explained Variance', fontsize = 20)
-#
-# #Plot the cumulative variance
+#     crop_image(item, item)
+
+w, h = 2048, 2048
+
+data = np.zeros((w*h, len(images_list)))
+
+for itr, item in enumerate(images_list):
+
+    img = Image()
+    img.read_image_file_into_array(item)
+    data[:, itr] = img.image_array.reshape(-1)
+
+# scaler = StandardScaler()
+
+# Fit on training set only.
+# data = scaler.fit_transform(data)
+
+pca = PCA(0.5)
+
+pca_data = pca.fit_transform(data)
+
+print("Number of components:", pca.n_components_)
+
+approximation = pca.inverse_transform(pca_data)
+
+average = Image()
+average.image_array = np.zeros((2048,2048))
+
+for itr in range(len(images_list)):
+
+    ind = Image()
+    ind.image_array = approximation[:, itr].reshape(2048, 2048)
+    current_file = os.path.join(target_folder, "ind_" + "{:03d}".format(itr))
+    ind.write_array_into_image_file(current_file, ".tiff")
+    average.image_array += ind.image_array
+
+
+current_file = os.path.join(target_folder, "avg_")
+average.image_array /= len(images_list)
+average.write_array_into_image_file(current_file, ".tiff")
+
+
+# plt.figure(figsize=(8,4))
+# Original Image
+# plt.subplot(1, 2, 1)
+# plt.imshow(data[:,1].reshape(512,512),
+#               cmap = plt.cm.gray, interpolation='nearest',
+#               clim=(-1, 1));
+# plt.xlabel('784 components', fontsize = 14)
+# plt.title('Original Image', fontsize = 20)
+
+# 154 principal components
+# plt.subplot(1, 2, 2)
+# plt.imshow(approximation[:,1].reshape(512, 512),
+#               cmap = plt.cm.gray, interpolation='nearest',
+#               clim=(-1, 1));
+# plt.xlabel('154 components', fontsize = 14)
+# plt.title('100% of Explained Variance', fontsize = 20)
+
+#Plot the cumulative variance
 # tot = sum(pca.explained_variance_)
 # var_exp = [(i/tot)*100 for i in sorted(pca.explained_variance_, reverse=True)]
 # cum_var_exp = np.cumsum(var_exp)
@@ -106,14 +107,14 @@ image_profile([images_list[0]])
 # plt.title('Cumulative Explained Variance as a Function of the Number of Components')
 # plt.ylabel('Cumulative Explained variance')
 # plt.xlabel('Principal components')
-#
-# # display_image(data[:,0].reshape(512,512), 0.5, "image")
-# # display_image(approximation[:,0].reshape(512,512), 0.5, "approx")
-#
-# # cv2.waitKey(0)
-# # cv2.destroyAllWindows()
-#
-# plt.show()
+
+# display_image(data[:,0].reshape(512,512), 0.5, "image")
+# display_image(approximation[:,0].reshape(512,512), 0.5, "approx")
+
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()
+
+plt.show()
 
 # # ======================================================================================================================
 #

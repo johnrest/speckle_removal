@@ -141,9 +141,10 @@ class Reconstruction(Image):
 
         H = np.sqrt(np.power(U - full_width/2 - 1, 2) + np.power(V - full_height/2 - 1, 2))
         H = H * (self.sensor_width/full_width)
-        H = np.exp(-1j*math.pi*(1/(self.wavelength*self.distance))*np.power(H,2))
+        H = np.exp(-1j*math.pi*(1/(self.wavelength*self.distance))*np.power(H, 2))
 
-        self.image_array = (np.fft.ifft2(np.fft.fftshift( self.image_array * H )))
+        self.image_array = np.fft.fftshift(np.fft.ifft2(np.fft.fftshift(self.image_array * H)))
+
 
 class RandomPhaseMask(Image):
     """ Phase mask to combine with the hologram reconstruction"""

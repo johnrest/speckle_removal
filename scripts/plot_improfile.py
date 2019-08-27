@@ -3,6 +3,7 @@
 from speck_rem import *
 
 
+
 def onMouse(event, x, y, flags, param):
     global posList
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -35,14 +36,14 @@ while True:
     if key == ord("c"):
         break
 
-points = np.array(posList)                       # convert to numpy for other usages
+points = np.array(posList)  # convert to numpy for other usages
 print("Stored positions are: ", points)
 points = points.T
 
 profile_data = image_profile(images_list[0:2], points)
 
 fig = plt.figure()
-plt.plot(profile_data[0,:], 'k--')
-plt.plot(profile_data[1,:], 'r--')
+plt.plot(profile_data[0, :], 'k--')
+plt.plot(profile_data[1, :], 'r--')
 
 plt.show()
