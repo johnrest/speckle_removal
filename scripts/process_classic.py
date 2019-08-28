@@ -1,35 +1,17 @@
 # Full process with the classic/standard methodology for a folder/file
 from speck_rem import *
 
-target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/temp_08_21/"
-results_folder = create_folder(target_folder, "rec2")
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/composed_B20_G0128/"
+results_folder = create_folder(target_folder, "rec")
 hologram_name_mask = "comp_holo_*"
 reconstruct_prefix = "rec_"
 reconstruct_format = ".tiff"
 data_filename = "data"
-roi_mode = "save"                       #load or save
+roi_mode = "load"                       #load or save
 
 focusing_distance = 0.85                    # meters
 
 images_list = get_list_images(target_folder, hologram_name_mask)
-
-# rec = Reconstruction(hologram)
-# rec.image_array = hologram.image_array
-# rec.propagate(focusing_distance)
-# roi = select_roi(np.sqrt(np.abs(rec.image_array)), "Select ROI")
-# # rec.image_array = abs(rec.image_array)
-# print("ROI: ", roi)
-#
-# print(rec.image_array.shape)
-# rec.image_array = crop_array_with_roi(rec.image_array, roi)
-#
-# display_image(abs(rec.image_array), 1, "Cropped reconstruction")
-#
-# current_file = os.path.join(results_folder, "roi01")
-# save_roi(roi, current_file)
-#
-# cv2.waitKey(0)
-
 
 if roi_mode == "load":
     current_file = os.path.join(results_folder, "roi01")

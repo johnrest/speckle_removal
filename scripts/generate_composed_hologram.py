@@ -35,7 +35,7 @@ def unique_3D_random_sampling(size, number_patterns):
     return batch
 
 target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/"
-results_folder = create_folder(target_folder, "temp")
+results_folder = create_folder(target_folder, "composed_B20_G0512")
 hologram_name_mask = "holo_0*"
 filename_base = "comp_holo_"
 
@@ -48,7 +48,7 @@ w, h = hologram.image_array.shape
 _, file_extension = os.path.splitext(images_list[0])
 
 batch_size = 20
-grain = 1024
+grain = 512
 pattern_size = int(w/grain)
 basis = len(images_list)
 
@@ -64,7 +64,12 @@ for itr, _ in enumerate(range(batch_size)):
     for jtr, pattern in enumerate(pattern_batch):
         binary_mask = pattern.repeat(grain, axis=0).repeat(grain, axis=1)
 
-        binary_mask = cv2.blur(binary_mask, (20, 20))
+        # binary_mask = cv2.blur(binary_mask, (20, 20))
+
+        mask = Image()
+        mask.image_array = binary_mask
+        current_file = os.path.join(results_folder, "mask_" + "{:02d}".format(itr) + "_{:02d}".format(jtr))
+        mask.write_array_into_image_file(current_file, file_extension)
 
         hologram = Hologram()
         hologram.read_image_file_into_array(images_list[idx_sel[jtr]])

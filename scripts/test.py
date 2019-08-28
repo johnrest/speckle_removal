@@ -4,19 +4,34 @@ from speck_rem.holography import Image
 
 # # ======================================================================================================================
 
-# target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_G256\rec\temp/"
-# file_mask = "rec_*"
-#
-#
-# images_list = get_list_images(target_folder, file_mask)
-#
-# image_profile([images_list[0]])
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/"
+file_mask = "holo_*"
 
-# print(*images_list, sep="\n")
+focusing_distance = .85
 
+images_list = get_list_images(target_folder, file_mask)
 
+hologram = Hologram()
+hologram.read_image_file_into_array(images_list[0])
+
+mask = np.zeros_like(hologram.image_array)
+mask[512:1536, 512:1536] = 1
+# mask = 1-mask
+display_image(mask, 0.5, "mask")
+
+rec = Reconstruction(hologram)
+rec.image_array = mask * hologram.image_array
+rec.propagate(focusing_distance)
+roi = select_roi(np.sqrt(np.abs(rec.image_array)), "Select ROI")
+
+rec.image_array = crop_array_with_roi(rec.image_array, roi)
+
+display_image(np.abs(rec.image_array), 1, "Reconstruction")
+
+cv2.waitKey(0)
 
 # # ======================================================================================================================
+"""
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
@@ -115,7 +130,7 @@ average.write_array_into_image_file(current_file, ".tiff")
 # cv2.destroyAllWindows()
 
 plt.show()
-
+"""
 # # ======================================================================================================================
 #
 # def test_random_pattern(scale, number_patterns):
