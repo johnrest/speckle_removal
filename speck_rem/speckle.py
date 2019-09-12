@@ -121,13 +121,13 @@ def superposition_average(images_list, filename, format):
     :return: None
     """
     first_image = Image()
-    first_image.read_image_file_into_array(images_list[0])
+    first_image.read_image_file_into_array(images_list[0], padding=False)
 
     array = np.ones(first_image.image_array.shape, dtype=float)
 
     for itr, item in enumerate(images_list):
         current = Image()
-        current.read_image_file_into_array(item)
+        current.read_image_file_into_array(item, padding=False)
         array += current.image_array
 
     final_image = Image()

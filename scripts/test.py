@@ -2,8 +2,106 @@
 from speck_rem import *
 from speck_rem.holography import Image
 
+
+# # ======================================================================================================================
+# Test: deconvolution to improve blurred images
+
+def resize_with_pad(image, hp=2048, wp=2048):
+
+    def get_padding_size(image):
+        h, w = image.shape
+
+        dh = hp - h
+        top = dh // 2
+        bottom = dh - top
+        dw = wp - w
+        left = dw // 2
+        right = dw - left
+
+        return top, bottom, left, right
+
+    top, bottom, left, right = get_padding_size(image)
+    BLACK = [0, 0]
+    resized_image = cv2.copyMakeBorder(image, top , bottom, left, right, cv2.BORDER_CONSTANT, value=BLACK)
+
+    return resized_image
+
+#Read reconstruction from file
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_B20_G0128/rec/"
+file_mask = "aver*"
+
+images_list = get_list_images(target_folder, file_mask)
+print(images_list)
+img = Image()
+img.read_image_file_into_array(images_list[0])
+
+
+IMG = resize_with_pad(img.image_array, 2048, 2048)
+display_image(IMG, 1, "Original")
+#Compute psf
+nx, ny = 2048, 2048
+x = np.linspace(-nx/2, nx/2, num=nx, endpoint=True)
+y = np.linspace(-ny/2, ny/2, num=ny, endpoint=True)
+xx, yy = np.meshgrid(x, y, sparse=True)
+W = 128
+
+psf = (np.sin(W * xx / nx) / (W * xx / nx)) *(np.sin(W * yy / ny) / (W * yy / ny))
+psf /= psf.sum()
+
+# IMG = cv2.dft(IMG, flags=cv2.DFT_COMPLEX_OUTPUT)
+# print(np.shape(IMG))
+# PSF = cv2.dft(psf, flags=cv2.DFT_COMPLEX_OUTPUT)
+# PSF2 = (PSF ** 2).sum(-1)
+# iPSF = PSF / (PSF2)[..., np.newaxis]
+# print(np.shape(iPSF))
+# RES = cv2.mulSpectrums(IMG, iPSF, 0)
+# res = cv2.idft(RES, flags=cv2.DFT_SCALE | cv2.DFT_REAL_OUTPUT)
+# # res = np.roll(res, -kh // 2, 0)
+# # res = np.roll(res, -kw // 2, 1)
+# display_image(np.abs(res), 1, "Deconv")
+
+# Alternative from http://www.radio-science.net/2017/09/deconvolution-in-frequency-domain-with.html
+# FFT true image
+H = np.fft.fft2(IMG)
+
+# FFT point spread function (first column of theory matrix G)
+P = np.fft.fft2(psf)
+
+# simulate measurement (d=Gm + \eta)
+# also normalize 2d FFT
+# fftshit resolves wrapping of spectral components (0..2pi to -pi..pi)
+d = (1.0/(H.shape[0]*H.shape[1]))*np.fft.fftshift(np.fft.ifft2(H*P).real)
+# add noise with standard deviation of 0.1
+d = d + np.random.randn(d.shape[0],d.shape[1])*0.1
+
+D = np.fft.fft2(d)
+
+# regularization parameter
+# (should be one to two orders of magnitude below the largest spectral component of point-spread function)
+alpha = 0.0000000001
+
+# -dampped spectral components,
+# -also known as Wiener filtering
+# (conj(S)/(|S|^2 + alpha^2)) U^H d
+M = (np.conj(P)/(np.abs(P)**2.0 + alpha**2.0))*D
+
+# maximum a posteriori estimate of deconvolved image
+# m_map = U (conj(S)/(|S|^2 + alpha^2)) U^H d
+m_map=(H.shape[1]*H.shape[0])*np.fft.fftshift(np.fft.ifft2(M).real)
+
+display_image(m_map, 1.0, "Deconvolved")
+
+
+cv2.waitKey(0)
+# plt.show()
+#Deconvolved with image read from file
+
+
 # # ======================================================================================================================
 
+"""
+# # ======================================================================================================================
+## Test
 target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/"
 file_mask = "holo_*"
 
@@ -31,7 +129,7 @@ display_image(np.abs(rec.image_array), 1, "Reconstruction")
 cv2.waitKey(0)
 
 # # ======================================================================================================================
-"""
+
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 

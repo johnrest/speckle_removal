@@ -35,7 +35,7 @@ def unique_3D_random_sampling(size, number_patterns):
     return batch
 
 target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/"
-results_folder = create_folder(target_folder, "composed_B20_G0512")
+results_folder = create_folder(target_folder, "composed_B20_G0064")
 hologram_name_mask = "holo_0*"
 filename_base = "comp_holo_"
 
@@ -48,13 +48,14 @@ w, h = hologram.image_array.shape
 _, file_extension = os.path.splitext(images_list[0])
 
 batch_size = 20
-grain = 512
+grain = 64
 pattern_size = int(w/grain)
 basis = len(images_list)
 
 for itr, _ in enumerate(range(batch_size)):
 
-    pattern_batch = unique_3D_random_sampling(pattern_size, basis)
+    batch_length = min([basis, pattern_size**2])
+    pattern_batch = unique_3D_random_sampling(pattern_size, batch_length)
 
     composed = Hologram()
     composed.image_array = np.zeros((w, h), dtype=np.float32)
@@ -66,6 +67,7 @@ for itr, _ in enumerate(range(batch_size)):
 
         # binary_mask = cv2.blur(binary_mask, (20, 20))
 
+        # Store each individual mask OPTIONAL
         mask = Image()
         mask.image_array = binary_mask
         current_file = os.path.join(results_folder, "mask_" + "{:02d}".format(itr) + "_{:02d}".format(jtr))
@@ -75,11 +77,18 @@ for itr, _ in enumerate(range(batch_size)):
         hologram.read_image_file_into_array(images_list[idx_sel[jtr]])
         hologram.image_array -= np.mean(hologram.image_array)
         composed.image_array = composed.image_array + hologram.image_array*binary_mask
-        # display_image(composed.image_array, 0.4, "Partial")
-        # cv2.waitKey(0)
+
+        # Test to store all individual holograms
+        # composed.image_array = hologram.image_array*binary_mask
+        # current_file = os.path.join(results_folder, filename_base + "{:02d}".format(itr) +
+        #                             "_{:02d}".format(jtr))
+        # print('Creating...', current_file)
+        # composed.write_array_into_image_file(current_file, file_extension)
+
 
     current_file = os.path.join(results_folder, filename_base + "{:03d}".format(itr))
     print('Creating...', current_file)
     composed.write_array_into_image_file(current_file, file_extension)
+
 
 # cv2.destroyAllWindows()

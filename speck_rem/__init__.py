@@ -15,6 +15,7 @@ from matplotlib import cm as CM
 #__all__ = ["holography", "speckle", "admin"]
 from admin import *
 from holography import *
+# from admin import *
 from speckle import *
 from dmd import *
 

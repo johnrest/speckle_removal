@@ -1,9 +1,6 @@
 # File for general purposes, i.e. tools needed throught the module
 
 from speck_rem import *
-# from speck_rem.holography import *
-
-# from .holography import Image
 
 def get_list_images(directory, mask):
     """
@@ -187,6 +184,9 @@ def image_profile(files, pts):
     :param pts: Numpy Array containing the points
     :return: profile_data, numpy array with data in columns
     """
+
+    # Fix bad design of circular dependencies with local import
+    from speck_rem.holography import Image
 
     # Check two points are available
     assert pts.shape[0] == 2, "Points are not correct"

@@ -3,7 +3,6 @@
 from speck_rem import *
 
 
-
 def onMouse(event, x, y, flags, param):
     global posList
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -12,12 +11,12 @@ def onMouse(event, x, y, flags, param):
         posList.append((x, y))
 
 
-target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/temp\rec2/"
-name_mask = "rec_*"
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\improfiles/"
+name_mask = "average_*"
 
 images_list = get_list_images(target_folder, name_mask)
-
-# Plot first image for reference
+print(images_list, sep="\n")
+# Plot first image for clicks
 image = Image()
 image.read_image_file_into_array(images_list[0])
 
@@ -40,10 +39,11 @@ points = np.array(posList)  # convert to numpy for other usages
 print("Stored positions are: ", points)
 points = points.T
 
-profile_data = image_profile(images_list[0:2], points)
+profile_data = image_profile(images_list, points)
 
 fig = plt.figure()
-plt.plot(profile_data[0, :], 'k--')
-plt.plot(profile_data[1, :], 'r--')
-
+plt.plot(profile_data[0, :], 'k--', label="64")
+plt.plot(profile_data[1, :], 'r--', label="128")
+plt.plot(profile_data[2, :], 'b--', label="512")
+plt.legend()
 plt.show()
