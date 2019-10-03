@@ -1,6 +1,7 @@
 # Script to select profiles from a list of images
 
 from speck_rem import *
+plt.rcParams.update({'font.size': 16})
 
 
 def onMouse(event, x, y, flags, param):
@@ -41,9 +42,16 @@ points = points.T
 
 profile_data = image_profile(images_list, points)
 
-fig = plt.figure()
-plt.plot(profile_data[0, :], 'k--', label="64")
-plt.plot(profile_data[1, :], 'r--', label="128")
-plt.plot(profile_data[2, :], 'b--', label="512")
+fig = plt.figure(figsize=(8,6))
+plt.plot(profile_data[0, :], 'g--', label="64")
+plt.plot(profile_data[1, :], 'b--', label="128")
+plt.plot(profile_data[2, :], 'r--', label="512")
 plt.legend()
+plt.xlabel("$Distance\ along\ profile\ [pix]$")
+plt.ylabel("$I$")
+
+format = '.svg'
+
+plt.savefig(os.path.join(target_folder, "improfile" + format), bbox_inches="tight")
+
 plt.show()

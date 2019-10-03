@@ -3,10 +3,10 @@
 from speck_rem import *
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\classic/"
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_B20_G0064\rec/"
 data_filename = "data.pkl"
 
-format = ".svg"
+format = ".png"
 
 plt.rcParams.update({'font.size': 16})
 
@@ -21,7 +21,7 @@ t = np.arange(1, number_images+1)
 fig = plt.figure(figsize=(8,6))
 plt.plot(t, 1.0/np.sqrt(t), 'k--')
 plt.plot(t, speckle_data["sc_avg"]/max(speckle_data["sc_avg"]), 'bo')
-plt.plot(t, speckle_data["sc_std"]/max(speckle_data["sc_std"]), 'r*')
+# plt.plot(t, speckle_data["sc_std"]/max(speckle_data["sc_std"]), 'r*')
 plt.xlabel("N")
 plt.ylabel("C")
 # plt.title("Speckle coefficient vs. number of images")
