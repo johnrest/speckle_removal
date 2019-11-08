@@ -1,9 +1,9 @@
 # Full process with the classic/standard methodology for a folder/file
 from speck_rem import *
 
-target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual/"
-results_folder = create_folder(target_folder, "classic")
-hologram_name_mask = "holo_*"
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_B20_G0512/"
+results_folder = create_folder(target_folder, "rec")
+hologram_name_mask = "comp_holo_*"
 reconstruct_prefix = "rec_"
 reconstruct_format = ".tiff"
 data_filename = "data"

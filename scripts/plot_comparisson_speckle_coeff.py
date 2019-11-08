@@ -16,7 +16,6 @@ data_filename = "data.pkl"
 
 format = ".svg"
 
-
 fig = plt.figure(figsize=(8,6))
 markers = ['gs-', 'b+-', 'r.-']
 labels = ["64", "128", "512"]
@@ -42,6 +41,15 @@ plt.xlabel("$N$")
 plt.ylabel("$C$")
 
 plt.legend()
+
+#Add specific ticks to xlabel
+xmin, xmax = ax.get_xlim()
+custom_ticks = np.linspace(xmin, xmax, 11, dtype=int)
+ax.set_xticks(custom_ticks)
+custom_ticks_str = list(map(str, custom_ticks))
+custom_ticks_str[0] = ""
+ax.set_xticklabels(custom_ticks_str)
+
 
 plt.savefig(os.path.join(results_folder, "coefficient" + format), bbox_inches="tight")
 

@@ -4,49 +4,100 @@ from speck_rem.holography import Image
 
 
 # # ======================================================================================================================
-# Test: deconvolution to improve blurred images
+# Test: fastNlMeansDenoisingMulti attempt to reduce the noise, thinking of temporal measurements
 
-def resize_with_pad(image, hp=2048, wp=2048):
-
-    def get_padding_size(image):
-        h, w = image.shape
-
-        dh = hp - h
-        top = dh // 2
-        bottom = dh - top
-        dw = wp - w
-        left = dw // 2
-        right = dw - left
-
-        return top, bottom, left, right
-
-    top, bottom, left, right = get_padding_size(image)
-    BLACK = [0, 0]
-    resized_image = cv2.copyMakeBorder(image, top , bottom, left, right, cv2.BORDER_CONSTANT, value=BLACK)
-
-    return resized_image
-
-#Read reconstruction from file
-target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_B20_G0128/rec/"
-file_mask = "aver*"
+target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\classic/"
+file_mask = "rec_*"
 
 images_list = get_list_images(target_folder, file_mask)
-print(images_list)
+# print(images_list)
 img = Image()
 img.read_image_file_into_array(images_list[0])
 
+display_image(img.image_array,1, "indiv")
 
-IMG = resize_with_pad(img.image_array, 2048, 2048)
-display_image(IMG, 1, "Original")
-#Compute psf
-nx, ny = 2048, 2048
-x = np.linspace(-nx/2, nx/2, num=nx, endpoint=True)
-y = np.linspace(-ny/2, ny/2, num=ny, endpoint=True)
-xx, yy = np.meshgrid(x, y, sparse=True)
-W = 128
+images = []
+for item in images_list:
+    img = Image()
+    img.read_image_file_into_array(item)
+    images.append(img.image_array.astype("uint8"))
 
-psf = (np.sin(W * xx / nx) / (W * xx / nx)) *(np.sin(W * yy / ny) / (W * yy / ny))
-psf /= psf.sum()
+filtered = cv2.fastNlMeansDenoisingMulti(images, 5, 11, None, 8, 11, 41)
+
+display_image(filtered, 1, "fastNLMeansMulti")
+
+cv2.waitKey()
+cv2.destroyAllWindows()
+
+# # ======================================================================================================================
+# Test: bilateral filter on reconstucted intensities for comparisson
+
+# target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\classic/"
+# file_mask = "rec_*"
+#
+# images_list = get_list_images(target_folder, file_mask)
+# print(images_list)
+# img = Image()
+# img.read_image_file_into_array(images_list[0])
+#
+# display_image(img.image_array, 1, "Original")
+# # cv2.waitKey()
+#
+# print(img.image_array.shape)
+#
+# filtered = cv2.bilateralFilter(img.image_array, 5, 255, 255)
+#
+# display_image(filtered, 1, "Bilateral filter")
+# cv2.waitKey()
+# cv2.destroyAllWindows()
+
+
+
+
+# # ======================================================================================================================
+# Test: deconvolution to improve blurred images
+
+# def resize_with_pad(image, hp=2048, wp=2048):
+#
+#     def get_padding_size(image):
+#         h, w = image.shape
+#
+#         dh = hp - h
+#         top = dh // 2
+#         bottom = dh - top
+#         dw = wp - w
+#         left = dw // 2
+#         right = dw - left
+#
+#         return top, bottom, left, right
+#
+#     top, bottom, left, right = get_padding_size(image)
+#     BLACK = [0, 0]
+#     resized_image = cv2.copyMakeBorder(image, top , bottom, left, right, cv2.BORDER_CONSTANT, value=BLACK)
+#
+#     return resized_image
+#
+# #Read reconstruction from file
+# target_folder = r"D:\Research\SpeckleRemoval\Data\2018_11_22\three\planar_fixed_freq_manual\composed_B20_G0128/rec/"
+# file_mask = "aver*"
+#
+# images_list = get_list_images(target_folder, file_mask)
+# print(images_list)
+# img = Image()
+# img.read_image_file_into_array(images_list[0])
+#
+#
+# IMG = resize_with_pad(img.image_array, 2048, 2048)
+# display_image(IMG, 1, "Original")
+# #Compute psf
+# nx, ny = 2048, 2048
+# x = np.linspace(-nx/2, nx/2, num=nx, endpoint=True)
+# y = np.linspace(-ny/2, ny/2, num=ny, endpoint=True)
+# xx, yy = np.meshgrid(x, y, sparse=True)
+# W = 128
+#
+# psf = (np.sin(W * xx / nx) / (W * xx / nx)) *(np.sin(W * yy / ny) / (W * yy / ny))
+# psf /= psf.sum()
 
 # IMG = cv2.dft(IMG, flags=cv2.DFT_COMPLEX_OUTPUT)
 # print(np.shape(IMG))
@@ -62,37 +113,37 @@ psf /= psf.sum()
 
 # Alternative from http://www.radio-science.net/2017/09/deconvolution-in-frequency-domain-with.html
 # FFT true image
-H = np.fft.fft2(IMG)
+# H = np.fft.fft2(IMG)
 
 # FFT point spread function (first column of theory matrix G)
-P = np.fft.fft2(psf)
+# P = np.fft.fft2(psf)
 
 # simulate measurement (d=Gm + \eta)
 # also normalize 2d FFT
 # fftshit resolves wrapping of spectral components (0..2pi to -pi..pi)
-d = (1.0/(H.shape[0]*H.shape[1]))*np.fft.fftshift(np.fft.ifft2(H*P).real)
+# d = (1.0/(H.shape[0]*H.shape[1]))*np.fft.fftshift(np.fft.ifft2(H*P).real)
 # add noise with standard deviation of 0.1
-d = d + np.random.randn(d.shape[0],d.shape[1])*0.1
+# d = d + np.random.randn(d.shape[0],d.shape[1])*0.1
 
-D = np.fft.fft2(d)
+# D = np.fft.fft2(d)
 
 # regularization parameter
 # (should be one to two orders of magnitude below the largest spectral component of point-spread function)
-alpha = 0.0000000001
+# alpha = 0.0000000001
 
 # -dampped spectral components,
 # -also known as Wiener filtering
 # (conj(S)/(|S|^2 + alpha^2)) U^H d
-M = (np.conj(P)/(np.abs(P)**2.0 + alpha**2.0))*D
+# M = (np.conj(P)/(np.abs(P)**2.0 + alpha**2.0))*D
 
 # maximum a posteriori estimate of deconvolved image
 # m_map = U (conj(S)/(|S|^2 + alpha^2)) U^H d
-m_map=(H.shape[1]*H.shape[0])*np.fft.fftshift(np.fft.ifft2(M).real)
+# m_map=(H.shape[1]*H.shape[0])*np.fft.fftshift(np.fft.ifft2(M).real)
 
-display_image(m_map, 1.0, "Deconvolved")
+# display_image(m_map, 1.0, "Deconvolved")
 
 
-cv2.waitKey(0)
+# cv2.waitKey(0)
 # plt.show()
 #Deconvolved with image read from file
 
